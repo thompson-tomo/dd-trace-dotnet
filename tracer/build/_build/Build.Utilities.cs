@@ -177,6 +177,9 @@ partial class Build
                            .ToList();
 
            var integrations = GenerateIntegrationDefinitions.GetAllIntegrations(assemblies);
+           // TODO: Fix this at some point to allow updating EasyNetQ
+           // This is the first integration that's not in the framework and that indirectly uses an integration
+           // integrations = integrations.Concat(GenerateIntegrationDefinitions.GetIndirectIntegrations());
 
            var dependabotProj = TracerDirectory / "dependabot" / "Datadog.Dependabot.Integrations.csproj";
            await DependabotFileManager.UpdateIntegrations(dependabotProj, integrations);

@@ -52,7 +52,7 @@ namespace Honeypot
             NugetPackages.Add("nunit.framework", new [] { "NUnit" });
             NugetPackages.Add("NUnit3.TestAdapter", new [] { "NUnit3TestAdapter" });
             NugetPackages.Add("Oracle.ManagedDataAccess", new [] { "Oracle.ManagedDataAccess" });
-            NugetPackages.Add("RabbitMQ.Client", new [] { "RabbitMQ.Client" });
+            NugetPackages.Add("RabbitMQ.Client", new [] { "RabbitMQ.Client", "EasyNetQ" });
             NugetPackages.Add("ServiceStack.Redis", new [] { "ServiceStack.Redis" });
             NugetPackages.Add("System.Data.SqlClient", new [] { "System.Data.SqlClient" });
             NugetPackages.Add("Microsoft.Data.SqlClient", new [] { "Microsoft.Data.SqlClient" });
