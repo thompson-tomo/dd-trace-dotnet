@@ -287,6 +287,70 @@ namespace Datadog.Trace.ClrProfiler.IntegrationTests
 #endif
             };
 
+      public static IEnumerable<object[]> EasyNetQ =>
+
+            new List<object[]>
+            {
+#if DEFAULT_SAMPLES
+                new object[] { string.Empty },
+#else
+#if NET461
+                new object[] { "1.1.4.506" },
+                new object[] { "2.3.3" },
+                new object[] { "3.8.0" },
+                new object[] { "4.0.9" },
+                new object[] { "5.6.0" },
+                new object[] { "6.5.2" },
+                new object[] { "7.2.0" },
+#endif
+#if NETCOREAPP2_1
+                new object[] { "1.1.4.506" },
+                new object[] { "2.3.3" },
+                new object[] { "3.8.0" },
+                new object[] { "4.0.9" },
+                new object[] { "5.6.0" },
+                new object[] { "6.5.2" },
+                new object[] { "7.2.0" },
+#endif
+#if NETCOREAPP3_0
+                new object[] { "1.1.4.506" },
+                new object[] { "2.3.3" },
+                new object[] { "3.8.0" },
+                new object[] { "4.0.9" },
+                new object[] { "5.6.0" },
+                new object[] { "6.5.2" },
+                new object[] { "7.2.0" },
+#endif
+#if NETCOREAPP3_1
+                new object[] { "1.1.4.506" },
+                new object[] { "2.3.3" },
+                new object[] { "3.8.0" },
+                new object[] { "4.0.9" },
+                new object[] { "5.6.0" },
+                new object[] { "6.5.2" },
+                new object[] { "7.2.0" },
+#endif
+#if NET5_0
+                new object[] { "1.1.4.506" },
+                new object[] { "2.3.3" },
+                new object[] { "3.8.0" },
+                new object[] { "4.0.9" },
+                new object[] { "5.6.0" },
+                new object[] { "6.5.2" },
+                new object[] { "7.2.0" },
+#endif
+#if NET6_0
+                new object[] { "1.1.4.506" },
+                new object[] { "2.3.3" },
+                new object[] { "3.8.0" },
+                new object[] { "4.0.9" },
+                new object[] { "5.6.0" },
+                new object[] { "6.5.2" },
+                new object[] { "7.2.0" },
+#endif
+#endif
+            };
+
       public static IEnumerable<object[]> SystemDataSqlClient =>
 
             new List<object[]>

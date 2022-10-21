@@ -134,6 +134,22 @@
     ]
   },
   {
+    "IntegrationName": "EasyNetQ",
+    "SampleProjectName": "Samples.EasyNetQ",
+    "NugetPackageSearchName": "EasyNetQ",
+    "MinVersion": "1.0.0",
+    "MaxVersionExclusive": "8.0.0",
+    "SpecificVersions": [
+      "1.0.*",
+      "2.*.*",
+      "3.*.*",
+      "4.*.*",
+      "5.*.*",
+      "6.*.*",
+      "7.*.*"
+    ]
+  },
+  {
     "IntegrationName": "SystemDataSqlClient",
     "SampleProjectName": "Samples.SqlServer",
     "NugetPackageSearchName": "System.Data.SqlClient",
