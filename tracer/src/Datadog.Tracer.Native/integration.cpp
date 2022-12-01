@@ -2,11 +2,7 @@
 #include "integration.h"
 #include "logger.h"
 
-#ifdef _WIN32
 #include <regex>
-#else
-#include <re2/re2.h>
-#endif
 #include <sstream>
 
 #include <unordered_map>
@@ -153,8 +149,17 @@ namespace
 
 #else
 
-        static re2::RE2 re("Version=([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)", RE2::Quiet);
-        re2::RE2::PartialMatch(shared::ToString(str), re, &major, &minor, &build, &revision);
+        static auto re = std::regex("Version=([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([0-9]+)");
+
+        std::string s = shared::ToString(str);
+        std::smatch match;
+        if (std::regex_search(s, match, re) && match.size() == 5)
+        {
+            std::basic_stringstream(match.str(1)) >> major;
+            std::basic_stringstream(match.str(2)) >> minor;
+            std::basic_stringstream(match.str(3)) >> build;
+            std::basic_stringstream(match.str(4)) >> revision;
+        }
 
 #endif
 
@@ -181,12 +186,13 @@ namespace
 
 #else
 
-        static re2::RE2 re("Culture=([a-zA-Z0-9]+)", RE2::Quiet);
+        static auto re = std::regex("Culture=([a-zA-Z0-9]+)");
 
-        std::string match;
-        if (re2::RE2::PartialMatch(shared::ToString(str), re, &match))
+        std::string s = shared::ToString(str);
+        std::smatch match;
+        if (std::regex_search(s, match, re) && match.size() == 2)
         {
-            locale = shared::ToWSTRING(match);
+            locale = shared::ToWSTRING(match.str(1));
         }
 
 #endif
@@ -220,15 +226,16 @@ namespace
 
 #else
 
-        static re2::RE2 re("PublicKeyToken=([a-fA-F0-9]{16})");
-        std::string match;
-        if (re2::RE2::PartialMatch(shared::ToString(str), re, &match))
+        static auto re = std::regex("PublicKeyToken=([a-fA-F0-9]{16})");
+        std::string s = shared::ToString(str);
+        std::smatch match;
+        if (std::regex_search(s, match, re) && match.size() == 2)
         {
             for (int i = 0; i < 8; i++)
             {
-                auto s = match.substr(i * 2, 2);
+                auto s = match.str(1).substr(i * 2, 2);
                 unsigned long x;
-                std::stringstream(s) >> std::hex >> x;
+                std::basic_stringstream(s) >> std::hex >> x;
                 data[i] = BYTE(x);
             }
         }
