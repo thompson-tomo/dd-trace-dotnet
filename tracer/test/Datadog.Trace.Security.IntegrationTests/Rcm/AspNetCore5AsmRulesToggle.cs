@@ -41,7 +41,7 @@ namespace Datadog.Trace.Security.IntegrationTests.Rcm
         public async Task TestRulesToggling()
         {
             var url = "/Health/?[$slice]=value";
-            var agent = await RunOnSelfHosted(true);
+            using var agent = await RunOnSelfHosted(true);
             var settings = VerifyHelper.GetSpanVerifierSettings();
             var ruleId = "crs-942-290";
 

@@ -37,7 +37,7 @@ namespace Datadog.Trace.Security.IntegrationTests.Iast
             var url = "/Iast";
             EnableIast(enableIast);
             IncludeAllHttpSpans = true;
-            var agent = await RunOnSelfHosted(enableSecurity: false);
+            using var agent = await RunOnSelfHosted(enableSecurity: false);
             var spans = await SendRequestsAsync(agent, new string[] { url });
 
             var settings = VerifyHelper.GetSpanVerifierSettings();
@@ -55,7 +55,7 @@ namespace Datadog.Trace.Security.IntegrationTests.Iast
             var filename = enableIast ? "Iast.WeakHashing.AspNetCore2.IastEnabled" : "Iast.WeakHashing.AspNetCore2.IastDisabled";
             EnableIast(enableIast);
             IncludeAllHttpSpans = true;
-            var agent = await RunOnSelfHosted(enableSecurity: false);
+            using var agent = await RunOnSelfHosted(enableSecurity: false);
             await TestWeakHashing(filename, agent);
         }
 
@@ -71,7 +71,7 @@ namespace Datadog.Trace.Security.IntegrationTests.Iast
             EnableIast(true);
             IncludeAllHttpSpans = true;
             var filename = vulnerabilitiesPerRequest == 1 ? "Iast.WeakHashing.AspNetCore2.IastEnabled.SingleVulnerability" : "Iast.WeakHashing.AspNetCore2.IastEnabled";
-            var agent = await RunOnSelfHosted(enableSecurity: false);
+            using var agent = await RunOnSelfHosted(enableSecurity: false);
             await TestWeakHashing(filename, agent);
         }
 
@@ -85,7 +85,7 @@ namespace Datadog.Trace.Security.IntegrationTests.Iast
             EnableIast(true);
             IncludeAllHttpSpans = true;
             var filename = "Iast.WeakHashing.AspNetCore2.IastEnabled";
-            var agent = await RunOnSelfHosted(enableSecurity: false);
+            using var agent = await RunOnSelfHosted(enableSecurity: false);
             await TestWeakHashing(filename, agent);
 
             filename = "Iast.WeakHashing.AspNetCore2.IastDisabled";
