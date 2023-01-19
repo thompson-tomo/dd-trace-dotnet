@@ -2721,10 +2721,13 @@ void basic_writer<Range>::write_double(T value, const format_specs &spec) {
 
   // Format NaN and ininity ourselves because sprintf's output is not consistent
   // across platforms.
+  /* Vendoring: Do not use this so we can avoid issues with glibc/musl */
+  /*
   if (internal::fputil::isnotanumber(value))
     return write_inf_or_nan(handler.upper ? "NAN" : "nan");
   if (internal::fputil::isinfinity(value))
     return write_inf_or_nan(handler.upper ? "INF" : "inf");
+  */
 
   memory_buffer buffer;
   bool use_grisu = FMT_USE_GRISU && sizeof(T) <= sizeof(double) &&
