@@ -29,6 +29,19 @@ jobs:
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
 
+      - name: Ensure dd-lib-dotnet-init images are published
+        shell: bash
+        run: |
+          if ! docker manifest inspect ghcr.io/datadog/dd-trace-dotnet/dd-lib-dotnet-init:${{ github.sha }} ; then
+            echo "::error::dd-lib-dotnet-init image not present : ${{ github.sha }}"
+            exit 1
+          fi
+
+          if ! docker manifest inspect ghcr.io/datadog/dd-trace-dotnet/dd-lib-dotnet-init:${{ github.sha }}-musl ; then
+            echo "::error::dd-lib-dotnet-init image not present : ${{ github.sha }}-musl"
+            exit 1
+          fi
+
       - name: "Get current version"
         id: versions
         run: ./tracer/build.sh OutputCurrentVersionToGitHub
