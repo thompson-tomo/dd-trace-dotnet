@@ -9,4 +9,8 @@
     <PackageReference Include="System.Net.Http.WinHttpHandler" Version="5.0.0" />
   </ItemGroup>
   
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Datadog.Trace.Manual\Datadog.Trace.Manual.csproj" />
+  </ItemGroup>
+  
 </Project>
