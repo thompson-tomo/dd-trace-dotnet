@@ -17,7 +17,7 @@ namespace Datadog.Trace.Util.Http
         internal QueryStringManager(bool reportQueryString, double timeout, string pattern = null, IDatadogLogger logger = null)
         {
             _reportQueryString = reportQueryString;
-            pattern ??= Tracer.Instance.Settings.ObfuscationQueryStringRegex;
+            pattern ??= Tracer.InternalInstance.Settings.ObfuscationQueryStringRegex;
             _obfuscatorLazy = new(() => ObfuscatorFactory.GetObfuscator(timeout, pattern, logger, reportQueryString));
         }
 

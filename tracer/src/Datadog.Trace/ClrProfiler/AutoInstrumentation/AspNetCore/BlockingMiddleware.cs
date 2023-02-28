@@ -81,7 +81,7 @@ internal class BlockingMiddleware
 
         if (security.Settings.Enabled)
         {
-            if (Tracer.Instance?.ActiveScope?.Span is Span span)
+            if (Tracer.InternalInstance?.ActiveScope?.Span is Span span)
             {
                 var securityCoordinator = new SecurityCoordinator(security, context, span);
                 if (_endPipeline && !context.Response.HasStarted)
@@ -122,7 +122,7 @@ internal class BlockingMiddleware
                 await WriteResponse(action, context, out endedResponse).ConfigureAwait(false);
                 if (security.Settings.Enabled)
                 {
-                    if (Tracer.Instance?.ActiveScope?.Span is Span span)
+                    if (Tracer.InternalInstance?.ActiveScope?.Span is Span span)
                     {
                         var securityCoordinator = new SecurityCoordinator(security, context, span);
                         if (!e.Reported)

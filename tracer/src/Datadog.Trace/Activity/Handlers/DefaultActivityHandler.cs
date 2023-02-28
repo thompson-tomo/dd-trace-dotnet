@@ -34,8 +34,8 @@ namespace Datadog.Trace.Activity.Handlers
         public void ActivityStarted<T>(string sourceName, T activity)
             where T : IActivity
         {
-            Tracer.Instance.TracerManager.Telemetry.IntegrationRunning(IntegrationId);
-            var activeSpan = (Span?)Tracer.Instance.ActiveScope?.Span;
+            Tracer.InternalInstance.TracerManager.Telemetry.IntegrationRunning(IntegrationId);
+            var activeSpan = (Span?)Tracer.InternalInstance.ActiveScope?.Span;
 
             // Propagate Trace and Parent Span ids
             SpanContext? parent = null;
@@ -111,10 +111,10 @@ namespace Datadog.Trace.Activity.Handlers
 
             static Scope CreateScopeFromActivity(T activity, SpanContext? parent, ulong? traceId, ulong? spanId, string? rawTraceId, string? rawSpanId)
             {
-                var span = Tracer.Instance.StartSpan(activity.OperationName, parent: parent, startTime: activity.StartTimeUtc, traceId: traceId, spanId: spanId, rawTraceId: rawTraceId, rawSpanId: rawSpanId);
-                Tracer.Instance.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
+                var span = Tracer.InternalInstance.StartSpan(activity.OperationName, parent: parent, startTime: activity.StartTimeUtc, traceId: traceId, spanId: spanId, rawTraceId: rawTraceId, rawSpanId: rawSpanId);
+                Tracer.InternalInstance.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
 
-                return Tracer.Instance.ActivateSpan(span, false);
+                return Tracer.InternalInstance.ActivateSpan(span, false);
             }
         }
 

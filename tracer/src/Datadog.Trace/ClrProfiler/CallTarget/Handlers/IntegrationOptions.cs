@@ -34,7 +34,7 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers
                 Log.Warning("DuckTypeException has been detected, the integration <{TIntegration}, {TTarget}> will be disabled.", typeof(TIntegration), typeof(TTarget));
                 if (_integrationId.Value is not null)
                 {
-                    Tracer.Instance.TracerManager.Telemetry.IntegrationDisabledDueToError(_integrationId.Value.Value, nameof(DuckTypeException));
+                    Tracer.InternalInstance.TracerManager.Telemetry.IntegrationDisabledDueToError(_integrationId.Value.Value, nameof(DuckTypeException));
                 }
 
                 _disableIntegration = true;
@@ -44,7 +44,7 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers
                 Log.Warning("CallTargetInvokerException has been detected, the integration <{TIntegration}, {TTarget}> will be disabled.", typeof(TIntegration), typeof(TTarget));
                 if (_integrationId.Value is not null)
                 {
-                    Tracer.Instance.TracerManager.Telemetry.IntegrationDisabledDueToError(_integrationId.Value.Value, nameof(CallTargetInvokerException));
+                    Tracer.InternalInstance.TracerManager.Telemetry.IntegrationDisabledDueToError(_integrationId.Value.Value, nameof(CallTargetInvokerException));
                 }
 
                 _disableIntegration = true;
@@ -56,7 +56,7 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers
         {
             if (_integrationId.Value is not null)
             {
-                Tracer.Instance.TracerManager.Telemetry.IntegrationRunning(_integrationId.Value.Value);
+                Tracer.InternalInstance.TracerManager.Telemetry.IntegrationRunning(_integrationId.Value.Value);
             }
         }
     }

@@ -30,7 +30,7 @@ public sealed class Test
         var module = suite.Module;
 
         var tags = new TestSpanTags(Suite.Tags, name);
-        var scope = Tracer.Instance.StartActiveInternal(
+        var scope = Tracer.InternalInstance.StartActiveInternal(
             string.IsNullOrEmpty(module.Framework) ? "test" : $"{module.Framework!.ToLowerInvariant()}.test",
             tags: tags,
             startTime: startDate);

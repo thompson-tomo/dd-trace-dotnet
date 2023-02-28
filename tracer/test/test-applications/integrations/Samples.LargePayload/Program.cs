@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
 using Datadog.Trace;
@@ -67,7 +68,10 @@ namespace Samples.LargePayload
 
                        Console.WriteLine("Test complete, waiting for spans to flush.");
 
-                       Tracer.Instance.ForceFlushAsync().Wait(); // Just make sure everything flushes
+                       // TODO: See if this becomes flaky or not
+                       Thread.Sleep(2000);
+
+                       // Tracer.InternalInstance.ForceFlushAsync().Wait(); // Just make sure everything flushes
 
                        Console.WriteLine("Complete.");
 

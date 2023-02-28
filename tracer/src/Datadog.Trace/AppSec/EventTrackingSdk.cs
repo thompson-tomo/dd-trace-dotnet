@@ -30,7 +30,7 @@ public static class EventTrackingSdk
         /// <param name="metadata">Metadata associated with the login success</param>
         public static void TrackUserLoginSuccessEvent(string userId, IDictionary<string, string> metadata)
         {
-            TrackUserLoginSuccessEvent(userId, metadata, Tracer.Instance);
+            TrackUserLoginSuccessEvent(userId, metadata, Tracer.InternalInstance);
         }
 
         internal static void TrackUserLoginSuccessEvent(string userId, IDictionary<string, string> metadata, Tracer tracer)
@@ -79,7 +79,7 @@ public static class EventTrackingSdk
         /// <param name="metadata">Metadata associated with the login failure</param>
         public static void TrackUserLoginFailureEvent(string userId, bool exists, IDictionary<string, string> metadata)
         {
-            TrackUserLoginFailureEvent(userId, exists, metadata, Tracer.Instance);
+            TrackUserLoginFailureEvent(userId, exists, metadata, Tracer.InternalInstance);
         }
 
         internal static void TrackUserLoginFailureEvent(string userId, bool exists, IDictionary<string, string> metadata, Tracer tracer)
@@ -127,7 +127,7 @@ public static class EventTrackingSdk
         /// <param name="metadata">Metadata associated with the custom event</param>
         public static void TrackCustomEvent(string eventName, IDictionary<string, string> metadata)
         {
-            TrackCustomEvent(eventName, metadata, Tracer.Instance);
+            TrackCustomEvent(eventName, metadata, Tracer.InternalInstance);
         }
 
         internal static void TrackCustomEvent(string eventName, IDictionary<string, string> metadata, Tracer tracer)

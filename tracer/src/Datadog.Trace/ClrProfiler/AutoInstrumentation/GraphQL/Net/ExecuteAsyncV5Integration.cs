@@ -45,7 +45,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.Net
         internal static CallTargetState OnMethodBegin<TTarget, TContext>(TTarget instance, TContext context)
             where TContext : IExecutionContextV5
         {
-            return new CallTargetState(scope: GraphQLCommon.CreateScopeFromExecuteAsyncV5(Tracer.Instance, context), state: context);
+            return new CallTargetState(scope: GraphQLCommon.CreateScopeFromExecuteAsyncV5(Tracer.InternalInstance, context), state: context);
         }
 
         /// <summary>

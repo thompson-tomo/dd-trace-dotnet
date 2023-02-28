@@ -45,7 +45,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Kafka
             // as a generic parameter, for injecting headers
             var partition = topicPartition.DuckCast<ITopicPartition>();
             Scope scope = KafkaHelper.CreateProducerScope(
-                Tracer.Instance,
+                Tracer.InternalInstance,
                 partition,
                 isTombstone: message.Value is null,
                 finishOnClose: deliveryHandler is null);
@@ -54,7 +54,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Kafka
             {
                 KafkaHelper.TryInjectHeaders<TTopicPartition, TMessage>(
                     scope.Span.Context,
-                    Tracer.Instance.TracerManager.DataStreamsManager,
+                    Tracer.InternalInstance.TracerManager.DataStreamsManager,
                     partition?.Topic,
                     message);
                 return new CallTargetState(scope);

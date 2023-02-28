@@ -19,7 +19,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Http.HttpClient
         public static CallTargetState OnMethodBegin<TTarget, TRequest>(TTarget instance, TRequest requestMessage, CancellationToken cancellationToken, IntegrationId integrationId, IntegrationId? implementationIntegrationId)
             where TRequest : IHttpRequestMessage
         {
-            var tracer = Tracer.Instance;
+            var tracer = Tracer.InternalInstance;
             if (requestMessage.Instance is not null && IsTracingEnabled(requestMessage.Headers, implementationIntegrationId))
             {
                 Scope scope = ScopeFactory.CreateOutboundHttpScope(tracer, requestMessage.Method.Method, requestMessage.RequestUri, integrationId, out HttpTags tags);
@@ -52,7 +52,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Http.HttpClient
             {
                 if (responseMessage.Instance is not null)
                 {
-                    scope.Span.SetHttpStatusCode(responseMessage.StatusCode, false, Tracer.Instance.Settings);
+                    scope.Span.SetHttpStatusCode(responseMessage.StatusCode, false, Tracer.InternalInstance.Settings);
                 }
 
                 if (exception != null)
@@ -70,7 +70,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Http.HttpClient
 
         private static bool IsTracingEnabled(IRequestHeaders headers, IntegrationId? implementationIntegrationId)
         {
-            if (implementationIntegrationId != null && !Tracer.Instance.Settings.IsIntegrationEnabled(implementationIntegrationId.Value))
+            if (implementationIntegrationId != null && !Tracer.InternalInstance.Settings.IsIntegrationEnabled(implementationIntegrationId.Value))
             {
                 return false;
             }

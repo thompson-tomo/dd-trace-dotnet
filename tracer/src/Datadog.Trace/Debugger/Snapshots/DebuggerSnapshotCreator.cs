@@ -681,7 +681,7 @@ namespace Datadog.Trace.Debugger.Snapshots
 
         internal void FinalizeSnapshot(string methodName, string typeFullName, DateTimeOffset? startTime, string probeFilePath)
         {
-            var activeScope = Tracer.Instance.InternalActiveScope;
+            var activeScope = Tracer.InternalInstance.InternalActiveScope;
             var traceId = activeScope?.Span?.TraceId.ToString();
             var spanId = activeScope?.Span?.SpanId.ToString();
 

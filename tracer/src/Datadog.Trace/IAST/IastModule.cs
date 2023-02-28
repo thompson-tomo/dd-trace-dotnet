@@ -49,7 +49,7 @@ internal static class IastModule
 
     private static Scope? GetScope(string evidenceValue, IntegrationId integrationId, string vulnerabilityType, string operationName, bool taintedFromEvidenceRequired = false)
     {
-        var tracer = Tracer.Instance;
+        var tracer = Tracer.InternalInstance;
         if (!iastSettings.Enabled || !tracer.Settings.IsIntegrationEnabled(integrationId))
         {
             // integration disabled, don't create a scope, skip this span

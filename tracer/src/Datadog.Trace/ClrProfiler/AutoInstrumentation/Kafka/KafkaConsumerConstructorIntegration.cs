@@ -28,7 +28,7 @@ public class KafkaConsumerConstructorIntegration
     internal static CallTargetState OnMethodBegin<TTarget, TConsumerBuilder>(TTarget instance, TConsumerBuilder consumer)
         where TConsumerBuilder : IConsumerBuilder
     {
-        if (Tracer.Instance.Settings.IsIntegrationEnabled(KafkaConstants.IntegrationId))
+        if (Tracer.InternalInstance.Settings.IsIntegrationEnabled(KafkaConstants.IntegrationId))
         {
             foreach (var kvp in consumer.Config)
             {

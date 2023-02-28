@@ -125,7 +125,7 @@ namespace Datadog.Trace.ClrProfiler
             }
 
             InitializeNoNativeParts();
-            var tracer = Tracer.Instance;
+            var tracer = Tracer.InternalInstance;
 
             try
             {
@@ -177,7 +177,7 @@ namespace Datadog.Trace.ClrProfiler
 
             if (tracer is null)
             {
-                Log.Debug("Skipping TraceMethods initialization because Tracer.Instance was null after InitializeNoNativeParts was invoked");
+                Log.Debug("Skipping TraceMethods initialization because Tracer.InternalInstance was null after InitializeNoNativeParts was invoked");
             }
             else
             {
@@ -368,7 +368,7 @@ namespace Datadog.Trace.ClrProfiler
 
             try
             {
-                if (Tracer.Instance.Settings.IsActivityListenerEnabled)
+                if (Tracer.InternalInstance.Settings.IsActivityListenerEnabled)
                 {
                     Log.Debug("Initializing activity listener.");
                     Activity.ActivityListener.Initialize();
@@ -387,7 +387,7 @@ namespace Datadog.Trace.ClrProfiler
         {
             var observers = new List<DiagnosticObserver>();
 
-            if (Tracer.Instance.Settings.AzureAppServiceMetadata?.IsFunctionsApp is not true)
+            if (Tracer.InternalInstance.Settings.AzureAppServiceMetadata?.IsFunctionsApp is not true)
             {
                 // Not adding the `AspNetCoreDiagnosticObserver` is particularly important for Azure Functions.
                 // The AspNetCoreDiagnosticObserver will be loaded in a separate Assembly Load Context, breaking the connection of AsyncLocal
