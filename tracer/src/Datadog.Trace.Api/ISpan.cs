@@ -18,19 +18,18 @@ namespace Datadog.Trace
         /// <summary>
         /// Gets or sets operation name
         /// </summary>
-        string OperationName { get; set; }
+        string? OperationName { get; set; }
 
         /// <summary>
         /// Gets or sets the resource name
         /// </summary>
-        string ResourceName { get; set; }
+        string? ResourceName { get; set; }
 
         /// <summary>
         /// Gets or sets the type of request this span represents (ex: web, db).
         /// Not to be confused with span kind.
         /// </summary>
-        /// <seealso cref="SpanTypes"/>
-        string Type { get; set; }
+        string? Type { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this span represents an error
@@ -40,7 +39,7 @@ namespace Datadog.Trace
         /// <summary>
         /// Gets or sets the service name.
         /// </summary>
-        string ServiceName { get; set; }
+        string? ServiceName { get; set; }
 
         /// <summary>
         /// Gets the trace's unique identifier.
@@ -55,7 +54,7 @@ namespace Datadog.Trace
         /// <summary>
         /// Gets the span's span context
         /// </summary>
-        ISpanContext Context { get;  }
+        ISpanContext Context { get; }
 
         /// <summary>
         /// Add a the specified tag to this span.
@@ -89,6 +88,6 @@ namespace Datadog.Trace
         /// </summary>
         /// <param name="key">The tag's key</param>
         /// <returns> The value for the tag with the key specified, or null if the tag does not exist</returns>
-        string GetTag(string key);
+        string? GetTag(string key);
     }
 }

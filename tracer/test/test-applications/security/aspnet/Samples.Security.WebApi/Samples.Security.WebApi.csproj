@@ -189,9 +189,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\src\Datadog.Trace\Datadog.Trace.csproj">
-      <Project>{5dfdf781-f24c-45b1-82ef-9125875a80a4}</Project>
-      <Name>Datadog.Trace</Name>
+    <ProjectReference Include="..\..\..\..\..\src\Datadog.Trace.Api\Datadog.Trace.Api.csproj">
+      <Project>{75f73a29-d3d1-48a0-8ec3-a4437683cc8b}</Project>
+      <Name>Datadog.Trace.Api</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\src\Datadog.Trace.Manual\Datadog.Trace.Manual.csproj">
+      <Project>{db9c8f7b-cea2-4c4a-8d04-7ee5157091f7}</Project>
+      <Name>Datadog.Trace.Manual</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

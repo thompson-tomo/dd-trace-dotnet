@@ -79,7 +79,7 @@ namespace Datadog.Trace.Tests
         public void StartActive_IgnoreActiveScope_RootSpan()
         {
             var firstScope = _tracer.StartActive("First");
-            var secondScope = (Scope)_tracer.StartActive("Second", new SpanCreationSettings { Parent = SpanContext.None });
+            var secondScope = (Scope)_tracer.StartActive("Second", new SpanCreationSettings { Parent = SpanCreationSettings.NoSpanContext });
             var secondSpan = secondScope.Span;
 
             Assert.True(secondSpan.IsRootSpan);
@@ -322,7 +322,7 @@ namespace Datadog.Trace.Tests
         {
             var firstSpan = _tracer.StartSpan("First");
             _tracer.ActivateSpan(firstSpan);
-            var secondSpan = _tracer.StartSpan("Second", parent: SpanContext.None);
+            var secondSpan = _tracer.StartSpan("Second", parent: SpanCreationSettings.NoSpanContext);
 
             Assert.True(secondSpan.IsRootSpan);
         }

@@ -123,7 +123,7 @@ public class DistributedPropagatorTests
 
         // create and populate SpanContext
         IReadOnlyDictionary<string, string> context = new SpanContext(
-            parent: SpanContext.None,
+            parent: SpanCreationSettings.NoSpanContext,
             traceContext,
             serviceName: null,
             TraceId,

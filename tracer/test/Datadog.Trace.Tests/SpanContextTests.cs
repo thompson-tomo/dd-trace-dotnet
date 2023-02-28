@@ -145,7 +145,7 @@ namespace Datadog.Trace.Tests
             traceContext.AdditionalW3CTraceState = additionalW3CTraceState;
 
             return new SpanContext(
-                parent: SpanContext.None,
+                parent: SpanCreationSettings.NoSpanContext,
                 traceContext,
                 serviceName: null,
                 traceId,

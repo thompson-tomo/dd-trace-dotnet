@@ -36,7 +36,7 @@ namespace Datadog.Trace.Tests.Propagators
             traceContext.SetSamplingPriority(SamplingPriorityValues.UserKeep);
             traceContext.Origin = "rum";
 
-            var context = new SpanContext(parent: SpanContext.None, traceContext, serviceName: null, 123456789, 987654321);
+            var context = new SpanContext(parent: SpanCreationSettings.NoSpanContext, traceContext, serviceName: null, 123456789, 987654321);
 
             var headers = new Mock<IHeadersCollection>();
 
@@ -67,7 +67,7 @@ namespace Datadog.Trace.Tests.Propagators
             traceContext.SetSamplingPriority(SamplingPriorityValues.UserKeep);
             traceContext.Origin = "rum";
 
-            var context = new SpanContext(parent: SpanContext.None, traceContext, serviceName: null, 123456789, 987654321);
+            var context = new SpanContext(parent: SpanCreationSettings.NoSpanContext, traceContext, serviceName: null, 123456789, 987654321);
 
             // using IHeadersCollection for convenience, but carrier could be any type
             var headers = new Mock<IHeadersCollection>();

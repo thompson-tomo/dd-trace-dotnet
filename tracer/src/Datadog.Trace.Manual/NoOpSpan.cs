@@ -12,8 +12,6 @@ namespace Datadog.Trace;
 /// </summary>
 public class NoOpSpan : ISpan
 {
-    internal static readonly NoOpSpanContext DefaultSpanContext = new();
-
     internal NoOpSpan()
     {
     }
@@ -21,7 +19,7 @@ public class NoOpSpan : ISpan
     /// <summary>
     /// Gets or sets operation name
     /// </summary>
-    public string OperationName
+    public string? OperationName
     {
         get => "DefaultOperationName";
         set { }
@@ -30,7 +28,7 @@ public class NoOpSpan : ISpan
     /// <summary>
     /// Gets or sets the resource name
     /// </summary>
-    public string ResourceName
+    public string? ResourceName
     {
         get => "DefaultResourceName";
         set { }
@@ -40,7 +38,7 @@ public class NoOpSpan : ISpan
     /// Gets or sets the type of request this span represents (ex: web, db).
     /// Not to be confused with span kind.
     /// </summary>
-    public string Type
+    public string? Type
     {
         get => "default";
         set { }
@@ -58,7 +56,7 @@ public class NoOpSpan : ISpan
     /// <summary>
     /// Gets or sets the service name.
     /// </summary>
-    public string ServiceName
+    public string? ServiceName
     {
         get => "DefaultServiceName";
         set { }
@@ -77,7 +75,7 @@ public class NoOpSpan : ISpan
     /// <summary>
     /// Gets the span's span context
     /// </summary>
-    public ISpanContext Context => DefaultSpanContext;
+    public ISpanContext Context => SpanCreationSettings.NoSpanContext;
 
     /// <summary>
     /// Add a the specified tag to this span.

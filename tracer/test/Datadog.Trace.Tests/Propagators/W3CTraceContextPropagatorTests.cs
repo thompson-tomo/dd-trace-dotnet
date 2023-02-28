@@ -78,7 +78,7 @@ namespace Datadog.Trace.Tests.Propagators
                                };
 
             traceContext.SetSamplingPriority(samplingPriority, mechanism: null, notifyDistributedTracer: false);
-            var spanContext = new SpanContext(parent: SpanContext.None, traceContext, serviceName: null, traceId: 1, spanId: 2);
+            var spanContext = new SpanContext(parent: SpanCreationSettings.NoSpanContext, traceContext, serviceName: null, traceId: 1, spanId: 2);
 
             var tracestate = W3CTraceContextPropagator.CreateTraceStateHeader(spanContext);
 
@@ -89,7 +89,7 @@ namespace Datadog.Trace.Tests.Propagators
         public void CreateTraceStateHeader_WithPublicPropagatedTags()
         {
             var traceContext = new TraceContext(tracer: null);
-            var spanContext = new SpanContext(parent: SpanContext.None, traceContext, serviceName: null, traceId: 1, spanId: 2);
+            var spanContext = new SpanContext(parent: SpanCreationSettings.NoSpanContext, traceContext, serviceName: null, traceId: 1, spanId: 2);
             var span = new Span(spanContext, DateTimeOffset.Now);
 
             var user = new UserDetails("12345")
@@ -118,7 +118,7 @@ namespace Datadog.Trace.Tests.Propagators
                                };
 
             traceContext.SetSamplingPriority(SamplingPriorityValues.UserKeep, mechanism: null, notifyDistributedTracer: false);
-            var spanContext = new SpanContext(parent: SpanContext.None, traceContext, serviceName: null, traceId: 123456789, spanId: 987654321, rawTraceId: null, rawSpanId: null);
+            var spanContext = new SpanContext(parent: SpanCreationSettings.NoSpanContext, traceContext, serviceName: null, traceId: 123456789, spanId: 987654321, rawTraceId: null, rawSpanId: null);
             var headers = new Mock<IHeadersCollection>();
 
             W3CPropagator.Inject(spanContext, headers.Object);
@@ -138,7 +138,7 @@ namespace Datadog.Trace.Tests.Propagators
                                };
 
             traceContext.SetSamplingPriority(SamplingPriorityValues.UserKeep, mechanism: null, notifyDistributedTracer: false);
-            var spanContext = new SpanContext(parent: SpanContext.None, traceContext, serviceName: null, traceId: 123456789, spanId: 987654321, rawTraceId: null, rawSpanId: null);
+            var spanContext = new SpanContext(parent: SpanCreationSettings.NoSpanContext, traceContext, serviceName: null, traceId: 123456789, spanId: 987654321, rawTraceId: null, rawSpanId: null);
             var headers = new Mock<IHeadersCollection>();
 
             W3CPropagator.Inject(spanContext, headers.Object, (carrier, name, value) => carrier.Set(name, value));

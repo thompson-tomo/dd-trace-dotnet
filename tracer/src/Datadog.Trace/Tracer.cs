@@ -216,11 +216,6 @@ namespace Datadog.Trace
         IScope ITracer.ActiveScope => ActiveScope;
 
         /// <summary>
-        /// Gets this tracer's settings.
-        /// </summary>
-        ImmutableTracerSettings ITracer.Settings => Settings;
-
-        /// <summary>
         /// Gets the <see cref="ITraceSampler"/> instance used by this <see cref="IDatadogTracer"/> instance.
         /// </summary>
         ITraceSampler IDatadogTracer.Sampler => TracerManager.Sampler;
@@ -301,7 +296,7 @@ namespace Datadog.Trace
             {
                 // don't set the span's parent,
                 // even if there is an active span
-                parent = SpanContext.None;
+                parent = SpanCreationSettings.NoSpanContext;
             }
 
             var span = StartSpan(operationName, tags: null, parent, serviceName: null, startTime);

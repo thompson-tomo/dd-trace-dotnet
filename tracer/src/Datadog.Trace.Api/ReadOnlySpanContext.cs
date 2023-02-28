@@ -7,7 +7,7 @@ namespace Datadog.Trace
 {
     internal class ReadOnlySpanContext : ISpanContext
     {
-        public ReadOnlySpanContext(ulong traceId, ulong spanId, string serviceName)
+        public ReadOnlySpanContext(ulong traceId, ulong spanId, string? serviceName)
         {
             TraceId = traceId;
             SpanId = spanId;
@@ -18,6 +18,6 @@ namespace Datadog.Trace
 
         public ulong SpanId { get; }
 
-        public string ServiceName { get; }
+        public string? ServiceName { get; }
     }
 }

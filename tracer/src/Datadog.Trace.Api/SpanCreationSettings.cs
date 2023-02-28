@@ -1,4 +1,4 @@
-﻿// <copyright file="SpanCreationSettings.cs" company="Datadog">
+// <copyright file="SpanCreationSettings.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2017 Datadog, Inc.
 // </copyright>
@@ -13,16 +13,22 @@ namespace Datadog.Trace
     public struct SpanCreationSettings
     {
         /// <summary>
+        /// A span context to indicate that the new span should not become a child of the
+        /// currently active span.
+        /// </summary>
+        public static readonly ISpanContext NoSpanContext = new ReadOnlySpanContext(traceId: 0, spanId: 0, serviceName: null);
+
+        /// <summary>
         /// Gets or sets an explicit start time for the new span. If not set, uses the current time.
         /// </summary>
         public DateTimeOffset? StartTime { get; set; }
 
         /// <summary>
         /// Gets or sets the new span's parent. To prevent a new span from inheriting a parent,
-        /// set to <see cref="SpanContext.None"/>. If not set, defaults to <c>null</c> and
+        /// set to <see cref="NoSpanContext"/>. If not set, defaults to <c>null</c> and
         /// the currently active span (if any) is used as the parent.
         /// </summary>
-        public ISpanContext Parent { get; set; }
+        public ISpanContext? Parent { get; set; }
 
         /// <summary>
         /// Gets or sets whether closing the new scope will close the contained span.

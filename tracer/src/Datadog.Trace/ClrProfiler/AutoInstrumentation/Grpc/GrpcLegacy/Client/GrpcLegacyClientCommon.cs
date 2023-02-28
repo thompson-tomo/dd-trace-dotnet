@@ -193,7 +193,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcLegacy.Client
                 var parentService = metadata.Get(TemporaryHeaders.ParentService)?.DuckCast<MetadataEntryStruct>().Value;
                 if (!string.IsNullOrEmpty(parentService) && ulong.TryParse(parentIdString, out var parentId))
                 {
-                    parentContext = new ReadOnlySpanContext(traceId.Value, parentId, parentService);
+                    parentContext = new SpanContext(traceId: traceId.Value, spanId: parentId, serviceName: parentService);
                 }
             }
         }
