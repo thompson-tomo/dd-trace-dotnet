@@ -54,6 +54,7 @@ namespace Datadog.Trace.ClrProfiler
                 // AwsSdk
                new ("AWSSDK.Core", "Amazon.Runtime.Internal.RuntimePipeline", "InvokeAsync",  new[] { "System.Threading.Tasks.Task`1<T>", "Amazon.Runtime.IExecutionContext" }, 3, 0, 0, 3, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SDK.RuntimePipelineInvokeAsyncIntegration"),
                new ("AWSSDK.Core", "Amazon.Runtime.Internal.RuntimePipeline", "InvokeSync",  new[] { "Amazon.Runtime.IResponseContext", "Amazon.Runtime.IExecutionContext" }, 3, 0, 0, 3, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SDK.RuntimePipelineInvokeSyncIntegration"),
+               new ("Datadog.Trace.Manual", "Datadog.Trace.Tracer", "get_Instance",  new[] { "Datadog.Trace.ITracer" }, 2, 25, 0, 2, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SDK.TracerInstanceIntegration"),
 
                 // AwsSqs
                new ("AWSSDK.SQS", "Amazon.SQS.AmazonSQSClient", "CreateQueue",  new[] { "Amazon.SQS.Model.CreateQueueResponse", "Amazon.SQS.Model.CreateQueueRequest" }, 3, 0, 0, 3, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SQS.CreateQueueIntegration"),
@@ -572,6 +573,7 @@ namespace Datadog.Trace.ClrProfiler
                     => Datadog.Trace.Configuration.IntegrationId.AspNetWebApi2,
                 "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SDK.RuntimePipelineInvokeAsyncIntegration"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SDK.RuntimePipelineInvokeSyncIntegration"
+                    or "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SDK.TracerInstanceIntegration"
                     => Datadog.Trace.Configuration.IntegrationId.AwsSdk,
                 "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SQS.CreateQueueIntegration"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.AWS.SQS.CreateQueueAsyncIntegration"
