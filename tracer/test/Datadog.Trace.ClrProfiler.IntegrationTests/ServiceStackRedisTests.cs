@@ -25,9 +25,20 @@ namespace Datadog.Trace.ClrProfiler.IntegrationTests
             : base("ServiceStack.Redis", output)
         {
             SetServiceVersion("1.0.0");
+            SetEnvironmentVariable("DD_TRACE_OTEL_ENABLED", "true");
         }
 
-        public override Result ValidateIntegrationSpan(MockSpan span) => span.IsServiceStackRedis();
+        public override Result ValidateIntegrationSpan(MockSpan span)
+        {
+            // TODO: Remove this code block. Temporarily we will get rid of additional "otel.*" tags
+            span.Tags.Remove("otel.library.name");
+            span.Tags.Remove("otel.library.version");
+            span.Tags.Remove("otel.trace_id");
+            span.Tags.Remove("otel.status_code");
+            span.Tags.Remove("language");
+
+            return span.IsServiceStackRedis();
+        }
 
         [SkippableTheory]
         [MemberData(nameof(PackageVersions.ServiceStackRedis), MemberType = typeof(PackageVersions))]
