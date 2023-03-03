@@ -49,9 +49,19 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.MongoDb
         internal static CallTargetState OnMethodBegin<TTarget, TConnection>(TTarget instance, TConnection connection, CancellationToken cancellationToken)
             where TConnection : IConnection
         {
-            var scope = MongoDbIntegration.CreateScope(instance, connection);
+            IScope iscope = MongoDbIntegration.CreateScope(instance, connection);
 
-            return new CallTargetState(scope);
+            if (iscope is Scope scope)
+            {
+                return new CallTargetState(scope);
+            }
+
+            if (iscope is IDisposable disposable)
+            {
+                return new CallTargetState(scope: null, state: disposable);
+            }
+
+            return CallTargetState.GetDefault();
         }
 
         /// <summary>
@@ -66,10 +76,8 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.MongoDb
         /// <returns>A response value, in an async scenario will be T of Task of T</returns>
         internal static CallTargetReturn<TReturn> OnMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception, in CallTargetState state)
         {
-            var scope = state.Scope;
-
-            scope.DisposeWithException(exception);
-
+            state.Scope.DisposeWithException(exception);
+            state.State.DisposeWithException(exception);
             return new CallTargetReturn<TReturn>(returnValue);
         }
     }

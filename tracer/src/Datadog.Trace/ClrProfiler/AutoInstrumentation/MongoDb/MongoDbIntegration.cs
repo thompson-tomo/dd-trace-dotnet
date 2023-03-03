@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Net;
 using Datadog.Trace.Configuration;
 using Datadog.Trace.DuckTyping;
@@ -30,7 +31,11 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.MongoDb
 
         private static readonly IDatadogLogger Log = DatadogLogging.GetLoggerFor(typeof(MongoDbIntegration));
 
-        internal static Scope CreateScope<TConnection>(object wireProtocol, TConnection connection)
+#if NET6_0_OR_GREATER
+        private static readonly System.Diagnostics.ActivitySource _source = new("Datadog.AutoInstrumentation.MongoDb");
+#endif
+
+        internal static IScope CreateScope<TConnection>(object wireProtocol, TConnection connection)
             where TConnection : IConnection
         {
             var tracer = Tracer.Instance;
@@ -41,11 +46,21 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.MongoDb
                 return null;
             }
 
+#if NET6_0_OR_GREATER
+            var parent = System.Diagnostics.Activity.Current;
+            if (parent != null &&
+                parent.GetTagItem("span.type")?.ToString() == SpanTypes.MongoDb &&
+                parent.GetTagItem(Tags.InstrumentationName) != null)
+            {
+                return null;
+            }
+#else
             if (GetActiveMongoDbScope(tracer) != null)
             {
                 // There is already a parent MongoDb span (nested calls)
                 return null;
             }
+#endif
 
             string collectionName = null;
             string query = null;
@@ -98,10 +113,32 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.MongoDb
 
             string serviceName = tracer.Settings.GetServiceName(tracer, ServiceName);
 
-            Scope scope = null;
+            IScope scope = null;
 
             try
             {
+#if NET6_0_OR_GREATER
+                var activity = _source.StartActivity(OperationName, kind: ActivityKind.Client);
+                if (activity is not null)
+                {
+                    scope = new ActivityScope(activity);
+                    activity.AddTag("operation.name", OperationName);
+                    activity.AddTag("service.name", serviceName);
+                    activity.AddTag(Tags.InstrumentationName, IntegrationName);
+
+                    activity.AddTag("span.type", SpanTypes.MongoDb);
+                    activity.DisplayName = resourceName ?? OperationName;
+                    activity.AddTag(Tags.DbName, databaseName);
+                    activity.AddTag(Tags.MongoDbQuery, query);
+                    activity.AddTag(Tags.MongoDbCollection, collectionName);
+                    activity.AddTag(Tags.OutHost, host);
+                    activity.AddTag(Tags.OutPort, port);
+
+#pragma warning disable 618 // App analytics is deprecated, but still used
+                    activity.AddTag(Tags.Analytics, tracer.Settings.GetIntegrationAnalyticsSampleRate(IntegrationId, enabledWithGlobalSetting: false));
+#pragma warning restore 618
+                }
+#else
                 var tags = new MongoDbTags();
                 scope = tracer.StartActiveInternal(OperationName, serviceName: serviceName, tags: tags);
                 var span = scope.Span;
@@ -114,6 +151,8 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.MongoDb
                 tags.Port = port;
 
                 tags.SetAnalyticsSampleRate(IntegrationId, tracer.Settings, enabledWithGlobalSetting: false);
+#endif
+
                 tracer.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
             }
             catch (Exception ex)

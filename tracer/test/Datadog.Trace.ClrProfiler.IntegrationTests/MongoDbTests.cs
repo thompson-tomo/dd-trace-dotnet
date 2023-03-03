@@ -29,9 +29,20 @@ namespace Datadog.Trace.ClrProfiler.IntegrationTests
             : base("MongoDB", output)
         {
             SetServiceVersion("1.0.0");
+            SetEnvironmentVariable("DD_TRACE_OTEL_ENABLED", "true");
         }
 
-        public override Result ValidateIntegrationSpan(MockSpan span) => span.IsMongoDb();
+        public override Result ValidateIntegrationSpan(MockSpan span)
+        {
+            // TODO: Remove this code block. Temporarily we will get rid of additional "otel.*" tags
+            span.Tags.Remove("otel.library.name");
+            span.Tags.Remove("otel.library.version");
+            span.Tags.Remove("otel.trace_id");
+            span.Tags.Remove("otel.status_code");
+            span.Tags.Remove("language");
+
+            return span.IsMongoDb();
+        }
 
         [SkippableTheory]
         [MemberData(nameof(PackageVersions.MongoDB), MemberType = typeof(PackageVersions))]
@@ -79,11 +90,11 @@ namespace Datadog.Trace.ClrProfiler.IntegrationTests
                                     .Where(x => x.GetTag(Tags.InstrumentationName) == "MongoDb")
                                     .ToList();
 
-                await VerifyHelper.VerifySpans(nonAdminSpans, settings)
-                                  .UseTextForParameters($"packageVersion={snapshotSuffix}")
-                                  .DisableRequireUniquePrefix();
-
                 ValidateIntegrationSpans(allMongoSpans, expectedServiceName: "Samples.MongoDB-mongodb");
+
+                await VerifyHelper.VerifySpans(nonAdminSpans, settings)
+                  .UseTextForParameters($"packageVersion={snapshotSuffix}")
+                  .DisableRequireUniquePrefix();
 
                 telemetry.AssertIntegrationEnabled(IntegrationId.MongoDb);
 
