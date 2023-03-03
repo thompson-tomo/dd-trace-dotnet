@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using Datadog.Trace.Configuration;
 using Datadog.Trace.Logging;
@@ -22,7 +23,11 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch
 
         private static readonly IDatadogLogger Log = DatadogLogging.GetLoggerFor(typeof(ElasticsearchNetCommon));
 
-        public static Scope CreateScope<T>(Tracer tracer, IntegrationId integrationId, RequestPipelineStruct pipeline, T requestData)
+#if NET6_0_OR_GREATER
+        private static readonly System.Diagnostics.ActivitySource _source = new("Datadog.AutoInstrumentation.Elasticsearch");
+#endif
+
+        public static IScope CreateScope<T>(Tracer tracer, IntegrationId integrationId, RequestPipelineStruct pipeline, T requestData)
             where T : IRequestData
         {
             if (!tracer.Settings.IsIntegrationEnabled(integrationId))
@@ -36,11 +41,19 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch
             var url = requestData.Uri?.ToString();
 
             var scope = CreateScope(tracer, integrationId, pathAndQuery, method, pipeline.RequestParameters, out var tags);
+
+#if NET6_0_OR_GREATER
+            if (scope is ActivityScope activityScope)
+            {
+                activityScope.Activity.AddTag(Tags.ElasticsearchUrl, url);
+            }
+#else
             tags.Url = url;
+#endif
             return scope;
         }
 
-        public static Scope CreateScope(Tracer tracer, IntegrationId integrationId, string path, string method, object requestParameters, out ElasticsearchTags tags)
+        public static IScope CreateScope(Tracer tracer, IntegrationId integrationId, string path, string method, object requestParameters, out ElasticsearchTags tags)
         {
             if (!tracer.Settings.IsIntegrationEnabled(integrationId))
             {
@@ -53,12 +66,31 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch
 
             string serviceName = tracer.Settings.GetServiceName(tracer, ServiceName);
 
-            Scope scope = null;
+            IScope scope = null;
 
             tags = new ElasticsearchTags();
 
             try
             {
+#if NET6_0_OR_GREATER
+                var activity = _source.StartActivity(OperationName, kind: ActivityKind.Client);
+                if (activity is not null)
+                {
+                    scope = new ActivityScope(activity);
+                    activity.AddTag("operation.name", OperationName);
+                    activity.AddTag("service.name", serviceName);
+                    activity.AddTag(Tags.InstrumentationName, ComponentValue);
+
+                    activity.AddTag("span.type", SpanType);
+                    activity.DisplayName = requestName ?? path ?? string.Empty;
+                    activity.AddTag(Tags.ElasticsearchAction, requestName);
+                    activity.AddTag(Tags.ElasticsearchMethod, method);
+
+#pragma warning disable 618 // App analytics is deprecated, but still used
+                    activity.AddTag(Tags.Analytics, tracer.Settings.GetIntegrationAnalyticsSampleRate(integrationId, enabledWithGlobalSetting: false));
+#pragma warning restore 618
+                }
+#else
                 scope = tracer.StartActiveInternal(OperationName, serviceName: serviceName, tags: tags);
                 var span = scope.Span;
                 span.ResourceName = requestName ?? path ?? string.Empty;
@@ -67,6 +99,8 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch
                 tags.Method = method;
 
                 tags.SetAnalyticsSampleRate(integrationId, tracer.Settings, enabledWithGlobalSetting: false);
+#endif
+
                 tracer.TracerManager.Telemetry.IntegrationGeneratedSpan(integrationId);
             }
             catch (Exception ex)

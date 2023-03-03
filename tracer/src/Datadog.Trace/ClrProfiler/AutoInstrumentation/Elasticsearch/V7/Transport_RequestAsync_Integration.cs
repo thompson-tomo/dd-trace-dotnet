@@ -43,9 +43,19 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch.V7
         /// <returns>Calltarget state value</returns>
         internal static CallTargetState OnMethodBegin<TTarget, THttpMethod, TPostData, TRequestParameters>(TTarget instance, THttpMethod method, string path, CancellationToken cancellationToken, TPostData postData, TRequestParameters requestParameters)
         {
-            var scope = ElasticsearchNetCommon.CreateScope(Tracer.Instance, ElasticsearchV7Constants.IntegrationId, path, method.ToString(), requestParameters, out var tags);
+            IScope iscope = ElasticsearchNetCommon.CreateScope(Tracer.Instance, ElasticsearchV7Constants.IntegrationId, path, method.ToString(), requestParameters, out var tags);
 
-            return new CallTargetState(scope, tags);
+            if (iscope is Scope scope)
+            {
+                return new CallTargetState(scope);
+            }
+
+            if (iscope is IDisposable disposable)
+            {
+                return new CallTargetState(scope: null, state: disposable);
+            }
+
+            return CallTargetState.GetDefault();
         }
 
         /// <summary>
@@ -65,16 +75,22 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch.V7
 
             if (uri != null)
             {
-                var tags = (ElasticsearchTags)state.State;
-
+#if NET6_0_OR_GREATER
+                if (state.State is ActivityScope activityScope)
+                {
+                    activityScope.Activity.AddTag(Tags.ElasticsearchUrl, uri);
+                }
+#else
+                var tags = (ElasticsearchTags)state.Scope?.Span.Tags;
                 if (tags != null)
                 {
                     tags.Url = uri;
                 }
+#endif
             }
 
             state.Scope.DisposeWithException(exception);
-
+            state.State.DisposeWithException(exception);
             return response;
         }
     }

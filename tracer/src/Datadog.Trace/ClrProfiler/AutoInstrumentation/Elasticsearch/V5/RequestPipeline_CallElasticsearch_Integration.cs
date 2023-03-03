@@ -37,9 +37,19 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch.V5
         /// <returns>Calltarget state value</returns>
         internal static CallTargetState OnMethodBegin<TTarget, TRequestData>(TTarget instance, TRequestData requestData)
         {
-            var scope = ElasticsearchNetCommon.CreateScope(Tracer.Instance, ElasticsearchV5Constants.IntegrationId, instance.DuckCast<RequestPipelineStruct>(), new RequestDataV5(requestData));
+            IScope iscope = ElasticsearchNetCommon.CreateScope(Tracer.Instance, ElasticsearchV5Constants.IntegrationId, instance.DuckCast<RequestPipelineStruct>(), new RequestDataV5(requestData));
 
-            return new CallTargetState(scope);
+            if (iscope is Scope scope)
+            {
+                return new CallTargetState(scope);
+            }
+
+            if (iscope is IDisposable disposable)
+            {
+                return new CallTargetState(scope: null, state: disposable);
+            }
+
+            return CallTargetState.GetDefault();
         }
 
         /// <summary>
@@ -55,6 +65,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Elasticsearch.V5
         internal static CallTargetReturn<TResponse> OnMethodEnd<TTarget, TResponse>(TTarget instance, TResponse response, Exception exception, in CallTargetState state)
         {
             state.Scope.DisposeWithException(exception);
+            state.State.DisposeWithException(exception);
             return new CallTargetReturn<TResponse>(response);
         }
     }
