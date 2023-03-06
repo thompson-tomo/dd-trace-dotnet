@@ -2044,6 +2044,231 @@ bool CorProfiler::ProfilerAssemblyIsLoadedIntoAppDomain(AppDomainID app_domain_i
            managed_profiler_loaded_app_domains.find(app_domain_id) != managed_profiler_loaded_app_domains.end();
 }
 
+HRESULT CorProfiler::EmitTracerInstanceTargetMethod(const ModuleMetadata& module_metadata, ModuleID module_id)
+{
+    // Emit a public Tracer.__GetInstanceForProfiler__() method, that will be used by
+    // RewriteForManualTracing
+    HRESULT hr = S_OK;
+
+    //
+    // *** Get the Manual Tracer TypeDef
+    //
+    mdTypeDef manualTracerTypeDef;
+    hr = module_metadata.metadata_import->FindTypeDefByName(manual_tracer_type_name.c_str(), mdTokenNil,
+                                                            &manualTracerTypeDef);
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Manual Tracing on getting Tracer TypeDef");
+        return hr;
+    }
+
+    //
+    // *** get_Instance MemberRef ***
+    //
+    mdTypeRef iTracerTypeRef;
+    hr = module_metadata.metadata_import->FindTypeDefByName(tracer_interface_name.c_str(), mdTokenNil,
+                                                            &iTracerTypeRef);
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Manual Tracing on getting ITracer TypeRef");
+        return hr;
+    }
+
+    COR_SIGNATURE instanceSignature[16];
+
+    unsigned type_buffer;
+    const auto type_size = CorSigCompressToken(iTracerTypeRef, &type_buffer);
+
+    unsigned offset = 0;
+
+    instanceSignature[offset++] = IMAGE_CEE_CS_CALLCONV_DEFAULT;
+    instanceSignature[offset++] = 0;
+    instanceSignature[offset++] = ELEMENT_TYPE_CLASS;
+    memcpy(&instanceSignature[offset], &type_buffer, type_size);
+    offset += type_size;
+
+    mdMemberRef instanceMemberRef;
+    hr = module_metadata.metadata_emit->DefineMemberRef(manualTracerTypeDef, WStr("get_Instance"),
+                                                        instanceSignature, offset, &instanceMemberRef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Manual Tracing on defining get_Instance MemberRef");
+        return hr;
+    }
+
+    constexpr COR_SIGNATURE signature[] = {
+        IMAGE_CEE_CS_CALLCONV_DEFAULT, // Calling convention
+        0,                             // Number of parameters
+        ELEMENT_TYPE_OBJECT,           // Return type
+    };
+
+    mdMethodDef targetMethodDef;
+
+    hr = module_metadata.metadata_emit->DefineMethod(
+         manualTracerTypeDef, distributed_tracer_target_method_name.c_str(), mdStatic | mdPublic,
+         signature, sizeof(signature), 0, 0, &targetMethodDef);
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error defining target method for Manual Tracing");
+        return hr;
+    }
+
+    /////////////////////////////////////////////
+    // Add IL instructions into the target __GetInstanceForProfiler__ method
+    //
+    //  public static object __GetInstanceForProfiler__() {
+    //      return Instance;
+    //  }
+    //
+    ILRewriter rewriter_get_instance(this->info_, nullptr, module_id, targetMethodDef);
+    rewriter_get_instance.InitializeTiny();
+
+    auto pALFirstInstr = rewriter_get_instance.GetILList()->m_pNext;
+
+    // Call the get_Instance() property getter
+    auto pALNewInstr = rewriter_get_instance.NewILInstr();
+    pALNewInstr->m_opcode = CEE_CALL;
+    pALNewInstr->m_Arg32 = instanceMemberRef;
+    rewriter_get_instance.InsertBefore(pALFirstInstr, pALNewInstr);
+
+    // ret : Return the value
+    pALNewInstr = rewriter_get_instance.NewILInstr();
+    pALNewInstr->m_opcode = CEE_RET;
+    rewriter_get_instance.InsertBefore(pALFirstInstr, pALNewInstr);
+
+    hr = rewriter_get_instance.Export();
+    if (FAILED(hr))
+    {
+        Logger::Warn("Failed to emit IL for Tracer.__GetInstanceForProfiler__ for ModuleID=", module_id);
+        return hr;
+    }
+
+    Logger::Info("Successfully added method Tracer.__GetInstanceForProfiler__ for ModuleID=", module_id);
+
+    return S_OK;
+}
+
+HRESULT CorProfiler::RewriteForManualTracing(const ModuleMetadata& module_metadata, ModuleID module_id)
+{
+    HRESULT hr = S_OK;
+
+    if (IsDebugEnabled())
+    {
+        LogManagedProfilerAssemblyDetails();
+    }
+
+    //
+    // *** Get DistributedTracer TypeDef
+    //
+    mdTypeDef distributedTracerTypeDef;
+    hr = module_metadata.metadata_import->FindTypeDefByName(manual_tracer_type_name.c_str(), mdTokenNil,
+                                                            &manualTracerTypeDef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Manual Tracing on getting Tracer TypeDef");
+        return hr;
+    }
+
+    //
+    // *** Import Current Version of assembly
+    //
+    mdAssemblyRef managed_profiler_assemblyRef;
+    hr = module_metadata.assembly_emit->DefineAssemblyRef(
+        managed_profiler_assembly_property.ppbPublicKey, managed_profiler_assembly_property.pcbPublicKey,
+        managed_profiler_assembly_property.szName.data(), &managed_profiler_assembly_property.pMetaData,
+        &managed_profiler_assembly_property.pulHashAlgId, sizeof(managed_profiler_assembly_property.pulHashAlgId),
+        managed_profiler_assembly_property.assemblyFlags, &managed_profiler_assemblyRef);
+
+    if (FAILED(hr) || managed_profiler_assemblyRef == mdAssemblyRefNil)
+    {
+        Logger::Warn("Error rewriting for Distributed Tracing on getting ManagedProfiler AssemblyRef");
+        return hr;
+    }
+
+    mdTypeRef tracerTypeRef;
+    hr = module_metadata.metadata_emit->DefineTypeRefByName(
+        managed_profiler_assemblyRef, tracer_type_name.c_str(), &tracerTypeRef);
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Tracing on getting DistributedTracer TypeRef");
+        return hr;
+    }
+
+    mdTypeRef iTracerTypeRef;
+    hr = module_metadata.metadata_emit->DefineTypeRefByName(
+        managed_profiler_assemblyRef, tracer_interface_name.c_str(), &iTracerTypeRef);
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Tracing on getting IDistributedTracer TypeRef");
+        return hr;
+    }
+
+    //
+    // *** GetDistributedTracer MethodDef ***
+    //
+    constexpr COR_SIGNATURE getDistributedTracerSignature[] = {IMAGE_CEE_CS_CALLCONV_DEFAULT, 0, ELEMENT_TYPE_OBJECT};
+    mdMethodDef getDistributedTraceMethodDef;
+    hr = module_metadata.metadata_import->FindMethod(distributedTracerTypeDef, WStr("GetTracer"),
+                                                     getDistributedTracerSignature, 3, &getDistributedTraceMethodDef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Tracing on getting GetDistributedTracer MethodDef");
+        return hr;
+    }
+
+    //
+    // *** Target (__GetInstanceForProfiler__) MemberRef ***
+    //
+    constexpr COR_SIGNATURE targetSignature[] = {
+        IMAGE_CEE_CS_CALLCONV_DEFAULT,
+        0,
+        ELEMENT_TYPE_OBJECT,
+    };
+
+    mdMemberRef targetMemberRef;
+    hr = module_metadata.metadata_emit->DefineMemberRef(manualTracerTypeRef,
+                                                        distributed_tracer_target_method_name.c_str(), targetSignature,
+                                                        sizeof(targetSignature), &targetMemberRef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Manual Tracing on defining __GetInstanceForProfiler__ MemberRef");
+        return hr;
+    }
+
+    ILRewriter getterRewriter(this->info_, nullptr, module_id, getDistributedTraceMethodDef);
+    getterRewriter.InitializeTiny();
+
+    // Modify first instruction from ldnull to call
+    ILRewriterWrapper getterWrapper(&getterRewriter);
+    getterWrapper.SetILPosition(getterRewriter.GetILList()->m_pNext);
+    getterWrapper.CallMember(targetMemberRef, false);
+    getterWrapper.Return();
+
+    hr = getterRewriter.Export();
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting GetDistributedTracer->[AutoInstrumentation]__GetInstanceForProfiler__");
+        return hr;
+    }
+
+    Logger::Info("Rewriting GetDistributedTracer->[AutoInstrumentation]__GetInstanceForProfiler__");
+
+    if (IsDumpILRewriteEnabled())
+    {
+        Logger::Info(GetILCodes("After -> GetDistributedTracer. ", &getterRewriter,
+                                GetFunctionInfo(module_metadata.metadata_import, getDistributedTraceMethodDef),
+                                module_metadata.metadata_import));
+    }
+
+    return hr;
+}
+
 HRESULT CorProfiler::EmitDistributedTracerTargetMethod(const ModuleMetadata& module_metadata, ModuleID module_id)
 {
     // Emit a public DistributedTracer.__GetInstanceForProfiler__() method, that will be used by RewriteForDistributedTracing

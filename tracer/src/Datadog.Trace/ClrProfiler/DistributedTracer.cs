@@ -58,6 +58,16 @@ namespace Datadog.Trace.ClrProfiler
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static object GetDistributedTracer() => Instance;
 
+        /// <summary>
+        /// Get the instance of ITracer. This method will be rewritten by the profiler.
+        /// </summary>
+        /// <remarks>Don't ever change the return type of this method,
+        /// as this would require special handling by the profiler.</remarks>
+        /// <returns>The instance of IDistributedTracer</returns>
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static object GetTracer() => Tracer.Instance;
+
         internal static void SetInstanceOnlyForTests(IDistributedTracer instance)
         {
             Instance = instance;

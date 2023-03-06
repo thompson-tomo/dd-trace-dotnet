@@ -102,8 +102,10 @@ private:
     bool ProfilerAssemblyIsLoadedIntoAppDomain(AppDomainID app_domain_id);
     std::string GetILCodes(const std::string& title, ILRewriter* rewriter, const FunctionInfo& caller,
                            const ComPtr<IMetaDataImport2>& metadata_import);
+    HRESULT RewriteForManualTracing(const ModuleMetadata& module_metadata, ModuleID module_id);
     HRESULT RewriteForDistributedTracing(const ModuleMetadata& module_metadata, ModuleID module_id);
     HRESULT RewriteForTelemetry(const ModuleMetadata& module_metadata, ModuleID module_id);
+    HRESULT EmitTracerInstanceTargetMethod(const ModuleMetadata& module_metadata, ModuleID module_id);
     HRESULT EmitDistributedTracerTargetMethod(const ModuleMetadata& module_metadata, ModuleID module_id);
     HRESULT TryRejitModule(ModuleID module_id);
     static bool TypeNameMatchesTraceAttribute(WCHAR type_name[], DWORD type_name_len);
