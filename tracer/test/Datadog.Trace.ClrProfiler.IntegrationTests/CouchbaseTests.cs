@@ -20,6 +20,7 @@ namespace Datadog.Trace.ClrProfiler.IntegrationTests
             : base("Couchbase", output)
         {
             SetServiceVersion("1.0.0");
+            SetEnvironmentVariable("DD_TRACE_OTEL_ENABLED", "true");
         }
 
         public static System.Collections.Generic.IEnumerable<object[]> GetCouchbase()
@@ -30,7 +31,17 @@ namespace Datadog.Trace.ClrProfiler.IntegrationTests
             }
         }
 
-        public override Result ValidateIntegrationSpan(MockSpan span) => span.IsCouchbase();
+        public override Result ValidateIntegrationSpan(MockSpan span)
+        {
+            // TODO: Remove this code block. Temporarily we will get rid of additional "otel.*" tags
+            span.Tags.Remove("otel.library.name");
+            span.Tags.Remove("otel.library.version");
+            span.Tags.Remove("otel.trace_id");
+            span.Tags.Remove("otel.status_code");
+            span.Tags.Remove("language");
+
+            return span.IsCouchbase();
+        }
 
         [SkippableTheory]
         [MemberData(nameof(GetCouchbase))]

@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Diagnostics;
 using Datadog.Trace.ClrProfiler.CallTarget;
 using Datadog.Trace.Configuration;
 using Datadog.Trace.DuckTyping;
@@ -31,6 +32,10 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Couchbase
         private const string ServiceName = "couchbase";
         private const IntegrationId IntegrationId = Configuration.IntegrationId.Couchbase;
         private static readonly IDatadogLogger Log = DatadogLogging.GetLoggerFor(typeof(CouchbaseCommon));
+
+#if NET6_0_OR_GREATER
+        private static readonly System.Diagnostics.ActivitySource _source = new("Datadog.AutoInstrumentation.Couchbase");
+#endif
 
         internal static CallTargetState CommonOnMethodBeginV3<TOperation>(TOperation tOperation)
         {
@@ -83,17 +88,41 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Couchbase
             {
                 var tracer = Tracer.Instance;
                 var serviceName = tracer.Settings.GetServiceName(tracer, ServiceName);
+#if NET6_0_OR_GREATER
+                var activity = _source.StartActivity(OperationName, kind: ActivityKind.Client);
+                if (activity is not null)
+                {
+                    activity.AddTag("operation.name", OperationName);
+                    activity.AddTag("service.name", serviceName);
+                    activity.AddTag(Tags.InstrumentationName, nameof(IntegrationId.Couchbase));
+
+                    activity.AddTag("span.type", "db");
+                    activity.DisplayName = tags.OperationCode;
+
+                    activity.AddTag(Tags.CouchbaseOperationCode, tags.OperationCode);
+                    activity.AddTag(Tags.CouchbaseOperationBucket, tags.Bucket);
+                    activity.AddTag(Tags.CouchbaseOperationKey, tags.Key);
+                    activity.AddTag(Tags.OutHost, tags.Host);
+                    activity.AddTag(Tags.OutPort, tags.Port);
+
+                    tracer.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
+                    return new CallTargetState(scope: null, state: new ActivityScope(activity));
+                }
+#else
                 var scope = tracer.StartActiveInternal(OperationName, serviceName: serviceName, tags: tags);
                 scope.Span.Type = SpanTypes.Db;
                 scope.Span.ResourceName = tags.OperationCode;
+
                 tracer.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
                 return new CallTargetState(scope);
+#endif
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Error creating or populating scope.");
-                return CallTargetState.GetDefault();
             }
+
+            return CallTargetState.GetDefault();
         }
 
         internal static CallTargetReturn<TOperationResult> CommonOnMethodEndSync<TOperationResult>(TOperationResult tResult, Exception exception, in CallTargetState state)
@@ -103,25 +132,38 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Couchbase
 
         internal static TOperationResult CommonOnMethodEnd<TOperationResult>(TOperationResult tResult, Exception exception, in CallTargetState state)
         {
+#if NET6_0_OR_GREATER
+            if (state.State == null || tResult == null)
+            {
+                state.State?.DisposeWithException(exception);
+                return tResult;
+            }
+#else
             if (state.Scope == null || tResult == null)
             {
                 state.Scope?.DisposeWithException(exception);
                 return tResult;
             }
+#endif
 
             var result = tResult.DuckCast<ResultStruct>();
-            var span = state.Scope.Span;
-
             if (!result.Success)
             {
+#if NET6_0_OR_GREATER
+                var activityScope = state.State as ActivityScope;
+                activityScope?.Activity.SetStatus(System.Diagnostics.ActivityStatusCode.Error, description: result.Message);
+#else
+                var span = state.Scope.Span;
                 span.Error = true;
                 if (!string.IsNullOrEmpty(result.Message))
                 {
                     span.SetTag(Tags.ErrorMsg, result.Message);
                 }
+#endif
             }
 
             state.Scope.DisposeWithException(exception ?? result.Exception);
+            state.State.DisposeWithException(exception ?? result.Exception);
             return tResult;
         }
     }

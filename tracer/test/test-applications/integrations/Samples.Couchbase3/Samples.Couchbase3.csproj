@@ -5,6 +5,10 @@
     <DefineConstants Condition="'$(ApiVersion)'&lt;'3.1.2'">$(DefineConstants);COUCHBASE_3_0</DefineConstants>
     <OutputType>Exe</OutputType>
     <RequiresDockerDependency>true</RequiresDockerDependency>
+
+    <!-- System.Runtime.CompilerServices.Unsafe doesn't support netcoreapp3.0-->
+    <!-- https://andrewlock.net/stop-lying-about-netstandard-2-support/-->
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <ItemGroup>

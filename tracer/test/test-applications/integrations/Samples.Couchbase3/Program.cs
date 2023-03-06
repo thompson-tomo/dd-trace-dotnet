@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Couchbase;
 using Couchbase.Core;
@@ -10,6 +11,9 @@ namespace Samples.Couchbase3
     {
         private static async Task Main()
         {
+#if NET7_0_OR_GREATER
+            System.Diagnostics.Activity.CurrentChanged += OnCurrentChanged;
+#endif
             var options = new ClusterOptions() 
                       .WithConnectionString("couchbase://" + Host())
                       .WithCredentials(username: "default", password: "password")
@@ -60,5 +64,12 @@ namespace Samples.Couchbase3
         {
             return Environment.GetEnvironmentVariable("COUCHBASE_HOST") ?? "localhost";
         }
+
+#if NET7_0_OR_GREATER
+        private static void OnCurrentChanged(object sender, ActivityChangedEventArgs e)
+        {
+            Console.WriteLine("Activity.Current changed");
+        }
+#endif
     }
 }

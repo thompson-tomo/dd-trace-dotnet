@@ -22,6 +22,7 @@ namespace Datadog.Trace.Activity.Handlers
             "Microsoft.EntityFrameworkCore",
             "MySqlConnector",
             "Npgsql",
+            "System.Net.Http",
             "System.Net.Http.Desktop",
             "SqlClientDiagnosticListener",
         };

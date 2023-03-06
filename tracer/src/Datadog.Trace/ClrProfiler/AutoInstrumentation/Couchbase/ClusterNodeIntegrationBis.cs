@@ -65,6 +65,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Couchbase
         internal static TReturn OnAsyncMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception, in CallTargetState state)
         {
             state.Scope?.DisposeWithException(exception);
+            state.State?.DisposeWithException(exception);
             return returnValue;
         }
     }

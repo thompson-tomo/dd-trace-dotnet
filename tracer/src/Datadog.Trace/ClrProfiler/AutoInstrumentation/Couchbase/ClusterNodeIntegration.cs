@@ -84,18 +84,31 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Couchbase
             // In 3.4.1, this is actually a Task<ResponseStatus>, so returnValue is not null
             // and for errors is non zero
             if (returnValue is not null
-             && exception is null
-             && state.Scope?.Span is { } span)
+             && exception is null)
             {
-                // Success has value 0 - there are _many_ other values
-                if ((int)(object)returnValue != 0)
+                if (state.Scope?.Span is { } span)
                 {
-                    span.Error = true;
-                    span.SetTag(Trace.Tags.ErrorMsg, returnValue.ToString());
+                    // Success has value 0 - there are _many_ other values
+                    if ((int)(object)returnValue != 0)
+                    {
+                        span.Error = true;
+                        span.SetTag(Trace.Tags.ErrorMsg, returnValue.ToString());
+                    }
                 }
+#if NET6_0_OR_GREATER
+                else if (state.State is ActivityScope activityScope)
+                {
+                    // Success has value 0 - there are _many_ other values
+                    if ((int)(object)returnValue != 0)
+                    {
+                        activityScope.Activity.SetStatus(System.Diagnostics.ActivityStatusCode.Error, description: returnValue.ToString());
+                    }
+                }
+#endif
             }
 
             state.Scope?.DisposeWithException(exception);
+            state.State?.DisposeWithException(exception);
             return returnValue;
         }
     }
