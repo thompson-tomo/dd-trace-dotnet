@@ -54,6 +54,14 @@ namespace Datadog.Trace.Propagators
             }
         }
 
+#if NET6_0_OR_GREATER
+        public void Inject<TCarrier, TCarrierSetter>(System.Diagnostics.ActivityContext context, TCarrier carrier, TCarrierSetter carrierSetter)
+            where TCarrierSetter : struct, ICarrierSetter<TCarrier>
+        {
+            // TODO: Implement
+        }
+#endif
+
         public bool TryExtract<TCarrier, TCarrierGetter>(TCarrier carrier, TCarrierGetter carrierGetter, out SpanContext? spanContext)
             where TCarrierGetter : struct, ICarrierGetter<TCarrier>
         {

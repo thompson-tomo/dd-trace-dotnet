@@ -34,6 +34,18 @@ namespace Datadog.Trace.Propagators
             carrierSetter.Set(carrier, B3, $"{traceId}-{spanId}-{sampled}");
         }
 
+#if NET6_0_OR_GREATER
+        public void Inject<TCarrier, TCarrierSetter>(System.Diagnostics.ActivityContext context, TCarrier carrier, TCarrierSetter carrierSetter)
+            where TCarrierSetter : struct, ICarrierSetter<TCarrier>
+        {
+            var traceId = context.TraceId.ToHexString();
+            var spanId = context.SpanId.ToHexString();
+            var sampled = (context.TraceFlags & System.Diagnostics.ActivityTraceFlags.Recorded) != 0 ? "1" : "0";
+
+            carrierSetter.Set(carrier, B3, $"{traceId}-{spanId}-{sampled}");
+        }
+#endif
+
         public bool TryExtract<TCarrier, TCarrierGetter>(TCarrier carrier, TCarrierGetter carrierGetter, out SpanContext? spanContext)
             where TCarrierGetter : struct, ICarrierGetter<TCarrier>
         {

@@ -88,6 +88,21 @@ namespace Datadog.Trace.Propagators
             Inject(context, headers, default(HeadersCollectionGetterAndSetter<TCarrier>));
         }
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Propagates the specified context by adding new headers to a <see cref="IHeadersCollection"/>.
+        /// This locks the sampling priority for <paramref name="context"/>.
+        /// </summary>
+        /// <param name="context">A <see cref="System.Diagnostics.ActivityContext"/> value that will be propagated into <paramref name="headers"/>.</param>
+        /// <param name="headers">A <see cref="IHeadersCollection"/> to add new headers to.</param>
+        /// <typeparam name="TCarrier">Type of header collection</typeparam>
+        public void Inject<TCarrier>(System.Diagnostics.ActivityContext context, TCarrier headers)
+            where TCarrier : IHeadersCollection
+        {
+            Inject(context, headers, default(HeadersCollectionGetterAndSetter<TCarrier>));
+        }
+#endif
+
         /// <summary>
         /// Propagates the specified context by adding new headers to a <see cref="IHeadersCollection"/>.
         /// This locks the sampling priority for <paramref name="context"/>.
@@ -116,6 +131,19 @@ namespace Datadog.Trace.Propagators
                 _injectors[i].Inject(context, carrier, carrierSetter);
             }
         }
+
+#if NET6_0_OR_GREATER
+        internal void Inject<TCarrier, TCarrierSetter>(System.Diagnostics.ActivityContext context, TCarrier carrier, TCarrierSetter carrierSetter)
+            where TCarrierSetter : struct, ICarrierSetter<TCarrier>
+        {
+            if (carrier is null) { ThrowHelper.ThrowArgumentNullException(nameof(carrier)); }
+
+            for (var i = 0; i < _injectors.Length; i++)
+            {
+                _injectors[i].Inject(context, carrier, carrierSetter);
+            }
+        }
+#endif
 
         /// <summary>
         /// Extracts a <see cref="SpanContext"/> from the values found in the specified headers.

@@ -116,6 +116,21 @@ namespace Datadog.Trace.Propagators
             }
         }
 
+#if NET6_0_OR_GREATER
+        public void Inject<TCarrier, TCarrierSetter>(System.Diagnostics.ActivityContext context, TCarrier carrier, TCarrierSetter carrierSetter)
+            where TCarrierSetter : struct, ICarrierSetter<TCarrier>
+        {
+            var traceparent = CreateTraceParentHeader(context);
+            carrierSetter.Set(carrier, TraceParentHeaderName, traceparent);
+
+            var tracestate = context.TraceState; // TODO: Add dd stuff
+            if (!string.IsNullOrWhiteSpace(tracestate))
+            {
+                carrierSetter.Set(carrier, TraceStateHeaderName, tracestate);
+            }
+        }
+#endif
+
         internal static string CreateTraceParentHeader(SpanContext context)
         {
             var traceId = IsValidHexString(context.RawTraceId, length: 32) ? context.RawTraceId : context.TraceId.ToString("x32");
@@ -125,6 +140,17 @@ namespace Datadog.Trace.Propagators
 
             return $"00-{traceId}-{spanId}-{sampled}";
         }
+
+#if NET6_0_OR_GREATER
+        internal static string CreateTraceParentHeader(System.Diagnostics.ActivityContext context)
+        {
+            var traceId = context.TraceId.ToHexString();
+            var spanId = context.SpanId.ToHexString();
+            var sampled = (context.TraceFlags & System.Diagnostics.ActivityTraceFlags.Recorded) != 0 ? "01" : "00";
+
+            return $"00-{traceId}-{spanId}-{sampled}";
+        }
+#endif
 
         internal static string CreateTraceStateHeader(SpanContext context)
         {

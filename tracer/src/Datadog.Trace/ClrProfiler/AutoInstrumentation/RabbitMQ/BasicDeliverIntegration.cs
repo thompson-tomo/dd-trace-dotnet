@@ -69,6 +69,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
         internal static CallTargetReturn OnMethodEnd<TTarget>(TTarget instance, Exception exception, in CallTargetState state)
         {
             state.Scope.DisposeWithException(exception);
+            state.State.DisposeWithException(exception);
             return CallTargetReturn.GetDefault();
         }
     }

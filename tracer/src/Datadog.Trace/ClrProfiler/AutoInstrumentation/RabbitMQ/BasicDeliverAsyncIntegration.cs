@@ -71,6 +71,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
         internal static TReturn OnAsyncMethodEnd<TTarget, TReturn>(TTarget instance, TReturn returnValue, Exception exception, in CallTargetState state)
         {
             state.Scope.DisposeWithException(exception);
+            state.State.DisposeWithException(exception);
             return returnValue;
         }
     }

@@ -40,7 +40,19 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
         /// <returns>Calltarget state value</returns>
         internal static CallTargetState OnMethodBegin<TTarget>(TTarget instance, string queue, string exchange, string routingKey, IDictionary<string, object> arguments)
         {
-            return new CallTargetState(RabbitMQIntegration.CreateScope(Tracer.Instance, out _, Command, SpanKinds.Client, queue: queue, exchange: exchange, routingKey: routingKey));
+            IScope iscope = RabbitMQIntegration.CreateScope(Tracer.Instance, out _, Command, SpanKinds.Client, queue: queue, exchange: exchange, routingKey: routingKey);
+
+            if (iscope is Scope scope)
+            {
+                return new CallTargetState(scope);
+            }
+
+            if (iscope is IDisposable disposable)
+            {
+                return new CallTargetState(scope: null, state: disposable);
+            }
+
+            return CallTargetState.GetDefault();
         }
 
         /// <summary>
@@ -54,6 +66,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
         internal static CallTargetReturn OnMethodEnd<TTarget>(TTarget instance, Exception exception, in CallTargetState state)
         {
             state.Scope.DisposeWithException(exception);
+            state.State.DisposeWithException(exception);
             return CallTargetReturn.GetDefault();
         }
     }

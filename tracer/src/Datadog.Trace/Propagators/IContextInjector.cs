@@ -11,6 +11,11 @@ namespace Datadog.Trace.Propagators
     {
         void Inject<TCarrier, TCarrierSetter>(SpanContext context, TCarrier carrier, TCarrierSetter carrierSetter)
             where TCarrierSetter : struct, ICarrierSetter<TCarrier>;
+#if NET6_0_OR_GREATER
+
+        void Inject<TCarrier, TCarrierSetter>(System.Diagnostics.ActivityContext context, TCarrier carrier, TCarrierSetter carrierSetter)
+            where TCarrierSetter : struct, ICarrierSetter<TCarrier>;
+#endif
     }
 
     internal interface ICarrierSetter<in TCarrier>

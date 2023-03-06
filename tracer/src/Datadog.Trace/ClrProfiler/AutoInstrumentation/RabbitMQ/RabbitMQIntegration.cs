@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Datadog.Trace.ClrProfiler.CallTarget;
 using Datadog.Trace.Configuration;
 using Datadog.Trace.DuckTyping;
@@ -23,11 +24,14 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
 
         private const string OperationName = "amqp.command";
         private const string ServiceName = "rabbitmq";
+#if NET6_0_OR_GREATER
+        private static readonly System.Diagnostics.ActivitySource _source = new("Datadog.AutoInstrumentation.Redis");
+#endif
 
         internal const IntegrationId IntegrationId = Configuration.IntegrationId.RabbitMQ;
         private static readonly IDatadogLogger Log = DatadogLogging.GetLoggerFor(typeof(RabbitMQIntegration));
 
-        internal static Scope CreateScope(Tracer tracer, out RabbitMQTags tags, string command, string spanKind, ISpanContext parentContext = null, DateTimeOffset? startTime = null, string queue = null, string exchange = null, string routingKey = null)
+        internal static IScope CreateScope(Tracer tracer, out RabbitMQTags tags, string command, string spanKind, ISpanContext parentContext = null, DateTimeOffset? startTime = null, string queue = null, string exchange = null, string routingKey = null)
         {
             tags = null;
 
@@ -37,12 +41,34 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
                 return null;
             }
 
-            Scope scope = null;
+            string serviceName = tracer.Settings.GetServiceName(tracer, ServiceName);
+            IScope scope = null;
 
             try
             {
+#if NET6_0_OR_GREATER
+                var activity = _source.StartActivity(OperationName, kind: ActivityKind.Client);
+                if (activity is not null)
+                {
+                    scope = new ActivityScope(activity);
+                    activity.AddTag("operation.name", "redis.command");
+                    activity.AddTag("service.name", serviceName);
+                    activity.AddTag(Tags.InstrumentationName, IntegrationName);
+
+                    activity.AddTag("span.type", SpanTypes.Queue);
+                    activity.DisplayName = command;
+                    activity.AddTag(Tags.AmqpCommand, command);
+                    activity.AddTag(Tags.AmqpQueue, queue);
+                    activity.AddTag(Tags.AmqpExchange, exchange);
+                    activity.AddTag(Tags.AmqpRoutingKey, routingKey);
+
+#pragma warning disable 618 // App analytics is deprecated, but still used
+                    activity.AddTag(Tags.Analytics, tracer.Settings.GetIntegrationAnalyticsSampleRate(IntegrationId, enabledWithGlobalSetting: false));
+#pragma warning restore 618
+                }
+#else
                 tags = new RabbitMQTags(spanKind);
-                string serviceName = tracer.Settings.GetServiceName(tracer, ServiceName);
+                
                 scope = tracer.StartActiveInternal(OperationName, parent: parentContext, tags: tags, serviceName: serviceName, startTime: startTime);
                 var span = scope.Span;
 
@@ -56,6 +82,8 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
 
                 tags.InstrumentationName = IntegrationName;
                 tags.SetAnalyticsSampleRate(IntegrationId, tracer.Settings, enabledWithGlobalSetting: false);
+#endif
+
                 tracer.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
             }
             catch (Exception ex)
@@ -72,6 +100,42 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
             where TBasicProperties : IBasicProperties
             where TBody : IBody // ReadOnlyMemory<byte> body in 6.0.0
         {
+#if NET6_0_OR_GREATER
+            var parent = System.Diagnostics.Activity.Current;
+            if (parent != null &&
+                parent.OperationName == OperationName)
+            {
+                // we are already instrumenting this,
+                // don't instrument nested methods that belong to the same stacktrace
+                // e.g. DerivedType.HandleBasicDeliver -> BaseType.RabbitMQ.Client.IAsyncBasicConsumer.HandleBasicDeliver
+                return CallTargetState.GetDefault();
+            }
+
+            SpanContext propagatedContext = null;
+
+            // try to extract propagated context values from headers
+            if (basicProperties?.Headers != null)
+            {
+                try
+                {
+                    propagatedContext = SpanContextPropagator.Instance.Extract(basicProperties.Headers, default(ContextPropagation));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error extracting propagated headers.");
+                }
+            }
+
+            IScope iscope = RabbitMQIntegration.CreateScope(Tracer.Instance, out RabbitMQTags tags, "basic.deliver", parentContext: propagatedContext, spanKind: SpanKinds.Consumer, exchange: exchange, routingKey: routingKey);
+
+            if (iscope is ActivityScope activityScope)
+            {
+                activityScope.Activity.AddTag(Tags.MessageSize, body?.Length.ToString() ?? "0");
+                return new CallTargetState(null, state: activityScope);
+            }
+
+            return new CallTargetState(iscope as Scope);
+#else
             if (IsActiveScopeRabbitMQ(Tracer.Instance))
             {
                 // we are already instrumenting this,
@@ -95,13 +159,15 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
                 }
             }
 
-            var scope = RabbitMQIntegration.CreateScope(Tracer.Instance, out RabbitMQTags tags, "basic.deliver", parentContext: propagatedContext, spanKind: SpanKinds.Consumer, exchange: exchange, routingKey: routingKey);
+            IScope iscope = RabbitMQIntegration.CreateScope(Tracer.Instance, out RabbitMQTags tags, "basic.deliver", parentContext: propagatedContext, spanKind: SpanKinds.Consumer, exchange: exchange, routingKey: routingKey);
+
             if (tags != null)
             {
                 tags.MessageSize = body?.Length.ToString() ?? "0";
             }
 
-            return new CallTargetState(scope);
+            return new CallTargetState(iscope as Scope);
+#endif
         }
 
         internal static bool IsActiveScopeRabbitMQ(Tracer tracer)

@@ -50,9 +50,9 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
             where TBasicProperties : IBasicProperties, IDuckType
             where TBody : IBody, IDuckType // Versions < 6.0.0: TBody is byte[] // Versions >= 6.0.0: TBody is ReadOnlyMemory<byte>
         {
-            var scope = RabbitMQIntegration.CreateScope(Tracer.Instance, out RabbitMQTags tags, Command, spanKind: SpanKinds.Producer, exchange: exchange, routingKey: routingKey);
+            IScope iscope = RabbitMQIntegration.CreateScope(Tracer.Instance, out RabbitMQTags tags, Command, spanKind: SpanKinds.Producer, exchange: exchange, routingKey: routingKey);
 
-            if (scope != null)
+            if (iscope is Scope scope)
             {
                 string exchangeDisplayName = string.IsNullOrEmpty(exchange) ? "<default>" : exchange;
                 string routingKeyDisplayName = string.IsNullOrEmpty(routingKey) ? "<all>" : routingKey.StartsWith("amq.gen-") ? "<generated>" : routingKey;
@@ -78,9 +78,41 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
 
                     SpanContextPropagator.Instance.Inject(scope.Span.Context, basicProperties.Headers, default(ContextPropagation));
                 }
+
+                return new CallTargetState(scope);
             }
 
-            return new CallTargetState(scope);
+#if NET6_0
+            if (iscope is ActivityScope activityScope)
+            {
+                string exchangeDisplayName = string.IsNullOrEmpty(exchange) ? "<default>" : exchange;
+                string routingKeyDisplayName = string.IsNullOrEmpty(routingKey) ? "<all>" : routingKey.StartsWith("amq.gen-") ? "<generated>" : routingKey;
+                activityScope.Activity.DisplayName = $"{Command} {exchangeDisplayName} -> {routingKeyDisplayName}";
+
+                if (tags != null)
+                {
+                    activityScope.Activity.AddTag(Tags.MessageSize, body.Instance != null ? body.Length.ToString() : "0");
+                }
+
+                if (basicProperties.Instance != null)
+                {
+                    if (tags != null && basicProperties.IsDeliveryModePresent())
+                    {
+                        activityScope.Activity.AddTag(Tags.AmqpDeliveryMode, DeliveryModeStrings[0x3 & basicProperties.DeliveryMode]);
+                    }
+
+                    // add distributed tracing headers to the message
+                    if (basicProperties.Headers == null)
+                    {
+                        basicProperties.Headers = new Dictionary<string, object>();
+                    }
+
+                    SpanContextPropagator.Instance.Inject(activityScope.Activity.Context, basicProperties.Headers, default(ContextPropagation));
+                }
+            }
+#endif
+
+            return new CallTargetState(scope: null, state: iscope);
         }
 
         /// <summary>
@@ -94,6 +126,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
         internal static CallTargetReturn OnMethodEnd<TTarget>(TTarget instance, Exception exception, in CallTargetState state)
         {
             state.Scope.DisposeWithException(exception);
+            state.State.DisposeWithException(exception);
             return CallTargetReturn.GetDefault();
         }
     }
