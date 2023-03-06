@@ -9,7 +9,7 @@
 
   <ItemGroup Condition="'$(MANUAL_INSTRUMENTATION)' == 'true' AND '$(VERSION_MISMATCH)' != 'true'">
     <!--    If you want to run the app locally, switch the reference out for this-->
-    <!--    <ProjectReference Include="..\..\..\..\src\Datadog.Trace\Datadog.Trace.csproj" />-->
+    <!--    <ProjectReference Include="..\..\..\..\src\Datadog.Trace.Manual\Datadog.Trace.Manual.csproj" />-->
     <Reference Include="Datadog.Trace">
       <HintPath>Datadog.Trace.dll</HintPath>
     </Reference>

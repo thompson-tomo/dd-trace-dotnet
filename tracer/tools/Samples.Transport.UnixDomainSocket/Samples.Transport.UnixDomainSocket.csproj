@@ -16,7 +16,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Datadog.Trace\Datadog.Trace.csproj">
+    <ProjectReference Include="..\..\src\Datadog.Trace.Manual\Datadog.Trace.Manual.csproj">
       <CopyLocal>True</CopyLocal>
       <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
       <ReferenceOutputAssembly>True</ReferenceOutputAssembly>

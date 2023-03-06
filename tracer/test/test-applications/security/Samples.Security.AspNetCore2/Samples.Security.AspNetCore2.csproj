@@ -19,6 +19,6 @@
     <Content Include="..\Samples.Security.AspNetCore5\Views\**\*.*" Link="Views\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\Datadog.Trace\Datadog.Trace.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Datadog.Trace.Manual\Datadog.Trace.Manual.csproj" />
   </ItemGroup>
 </Project>
