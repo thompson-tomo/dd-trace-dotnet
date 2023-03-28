@@ -86,6 +86,22 @@ namespace Datadog.Trace.Tests.CallTarget
             }
         }
 
+        [Fact]
+        public async Task CancelledWithoutExceptionTest()
+        {
+            var task = Task.FromCanceled(new CancellationToken(canceled: true));
+
+            await Assert.ThrowsAsync<TaskCanceledException>(() => task);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+
+            // Using the continuation
+            var tcg = new TaskContinuationGenerator<TaskAsyncContinuationGeneratorTests, TaskAsyncContinuationGeneratorTests, Task>();
+            var state = CallTargetState.GetDefault();
+            var continuation = tcg.SetContinuation(this, task, null, in state);
+            await Assert.ThrowsAsync<TaskCanceledException>(() => continuation);
+            Assert.Equal(TaskStatus.Canceled, task.Status);
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]

@@ -36,8 +36,12 @@ namespace Benchmarks.Trace
             CallTarget.Run<HttpClientHandlerIntegration, HttpClientBenchmark, HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>
                 (this, HttpRequest, CancellationToken.None, &GetResult).GetAwaiter().GetResult();
             return "OK";
+        }
 
-            static Task<HttpResponseMessage> GetResult(HttpRequestMessage request, CancellationToken cancellationToken) => CachedResult;
+        static async Task<HttpResponseMessage> GetResult(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await Task.Delay(100);
+            return new HttpResponseMessage();
         }
     }
 }

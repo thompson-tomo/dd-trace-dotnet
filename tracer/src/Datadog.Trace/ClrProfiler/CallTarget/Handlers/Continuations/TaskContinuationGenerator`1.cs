@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Datadog.Trace.Vendors.Serilog.Events;
@@ -71,68 +72,95 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers.Continuations
                     return returnValue;
                 }
 
-                Task<TResult> previousTask = FromTReturn<Task<TResult>>(returnValue);
+                var previousTask = FromTReturn<Task<TResult>>(returnValue);
                 if (previousTask.Status == TaskStatus.RanToCompletion)
                 {
                     return ToTReturn(Task.FromResult(_continuation(instance, previousTask.Result, default, in state)));
                 }
 
-                return ToTReturn(ContinuationAction(previousTask, instance, state));
+                var closure = new Closure(this, previousTask, instance, state);
+
+                closure.OnCompleted();
+
+                return ToTReturn(closure.Task);
             }
 
-            private async Task<TResult> ContinuationAction(Task<TResult> previousTask, TTarget target, CallTargetState state)
+            private class Closure
             {
-                if (!previousTask.IsCompleted)
+                private Action _onCompleted;
+                private Task<TResult> _previousTask;
+                private AsyncTaskMethodBuilder<TResult> _builder;
+                private TTarget _target;
+                private CallTargetState _state;
+                private SyncCallbackHandler _handler;
+
+                public Closure(SyncCallbackHandler handler, Task<TResult> previousTask, TTarget target, in CallTargetState state)
                 {
-                    await new NoThrowAwaiter(previousTask, _preserveContext);
+                    _handler = handler;
+                    _previousTask = previousTask;
+                    _target = target;
+                    _state = state;
+                    _onCompleted = OnCompleted;
                 }
 
-                TResult taskResult = default;
-                Exception exception = null;
-                TResult continuationResult = default;
+                public Task Task => _builder.Task;
 
-                if (previousTask.Status == TaskStatus.RanToCompletion)
+                public void OnCompleted()
                 {
-                    taskResult = previousTask.Result;
-                }
-                else if (previousTask.Status == TaskStatus.Faulted)
-                {
-                    exception = previousTask.Exception?.GetBaseException();
-                }
-                else if (previousTask.Status == TaskStatus.Canceled)
-                {
+                    if (!_previousTask.IsCompleted)
+                    {
+                        _ = Task;
+
+                        _previousTask.ConfigureAwait(_handler._preserveContext).GetAwaiter().OnCompleted(_onCompleted);
+                        return;
+                    }
+
+                    TResult taskResult = default;
+                    Exception exception = null;
+                    TResult continuationResult = default;
+
+                    if (_previousTask.Status == TaskStatus.RanToCompletion)
+                    {
+                        taskResult = _previousTask.Result;
+                    }
+                    else if (_previousTask.Status == TaskStatus.Faulted)
+                    {
+                        exception = _previousTask.Exception?.GetBaseException();
+                    }
+                    else if (_previousTask.Status == TaskStatus.Canceled)
+                    {
+                        try
+                        {
+                            // The only supported way to extract the cancellation exception is to await the task
+                            _previousTask.ConfigureAwait(_handler._preserveContext).GetAwaiter().GetResult();
+                        }
+                        catch (Exception ex)
+                        {
+                            exception = ex;
+                        }
+                    }
+
                     try
                     {
-                        // The only supported way to extract the cancellation exception is to await the task
-                        await previousTask.ConfigureAwait(_preserveContext);
+                        // *
+                        // Calls the CallTarget integration continuation, exceptions here should never bubble up to the application
+                        // *
+                        continuationResult = _handler._continuation(_target, taskResult, exception, in _state);
                     }
                     catch (Exception ex)
                     {
-                        exception = ex;
+                        IntegrationOptions<TIntegration, TTarget>.LogException(ex);
+                    }
+
+                    if (exception != null)
+                    {
+                        _builder.SetException(exception);
+                    }
+                    else
+                    {
+                        _builder.SetResult(continuationResult);
                     }
                 }
-
-                try
-                {
-                    // *
-                    // Calls the CallTarget integration continuation, exceptions here should never bubble up to the application
-                    // *
-                    continuationResult = _continuation(target, taskResult, exception, in state);
-                }
-                catch (Exception ex)
-                {
-                    IntegrationOptions<TIntegration, TTarget>.LogException(ex);
-                }
-
-                // *
-                // If the original task throws an exception we rethrow it here.
-                // *
-                if (exception != null)
-                {
-                    ExceptionDispatchInfo.Capture(exception).Throw();
-                }
-
-                return continuationResult;
             }
         }
 

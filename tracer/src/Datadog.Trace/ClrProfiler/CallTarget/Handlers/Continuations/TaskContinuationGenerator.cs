@@ -4,7 +4,7 @@
 // </copyright>
 
 using System;
-using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Datadog.Trace.Vendors.Serilog.Events;
 
@@ -79,11 +79,15 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers.Continuations
                 return ToTReturn(ContinuationAction(previousTask, instance, state));
             }
 
-            private async Task ContinuationAction(Task previousTask, TTarget target, CallTargetState state)
+            private Task ContinuationAction(Task previousTask, TTarget target, CallTargetState state, AsyncTaskMethodBuilder builder = default)
             {
                 if (!previousTask.IsCompleted)
                 {
-                    await new NoThrowAwaiter(previousTask, _preserveContext);
+                    // Force the creaction of the task *before* copying the builder
+                    var task = builder.Task;
+
+                    previousTask.ConfigureAwait(_preserveContext).GetAwaiter().OnCompleted(() => ContinuationAction(previousTask, target, state, builder));
+                    return task;
                 }
 
                 Exception exception = null;
@@ -97,7 +101,7 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers.Continuations
                     try
                     {
                         // The only supported way to extract the cancellation exception is to await the task
-                        await previousTask.ConfigureAwait(_preserveContext);
+                        previousTask.ConfigureAwait(_preserveContext).GetAwaiter().GetResult();
                     }
                     catch (Exception ex)
                     {
@@ -117,13 +121,16 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers.Continuations
                     IntegrationOptions<TIntegration, TTarget>.LogException(ex);
                 }
 
-                // *
-                // If the original task throws an exception we rethrow it here.
-                // *
                 if (exception != null)
                 {
-                    ExceptionDispatchInfo.Capture(exception).Throw();
+                    builder.SetException(exception);
                 }
+                else
+                {
+                    builder.SetResult();
+                }
+
+                return builder.Task;
             }
         }
 
@@ -131,42 +138,68 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers.Continuations
         {
             private readonly AsyncObjectContinuationMethodDelegate _asyncContinuation;
             private readonly bool _preserveContext;
+            private readonly Action _onCompleted;
+
+            // State to preserve when awaiting
+            private Task _previousTask;
+            private TTarget _target;
+            private CallTargetState _state;
+            private Exception _exception;
+            private AsyncTaskMethodBuilder _builder;
+            private ConfiguredTaskAwaitable<object>.ConfiguredTaskAwaiter? _continuationAwaiter;
 
             public AsyncCallbackHandler(AsyncObjectContinuationMethodDelegate asyncContinuation, bool preserveContext)
             {
                 _asyncContinuation = asyncContinuation;
                 _preserveContext = preserveContext;
+                _onCompleted = OnCompleted;
             }
 
             public override TReturn ExecuteCallback(TTarget instance, TReturn returnValue, Exception exception, in CallTargetState state)
             {
-                var previousTask = returnValue == null ? null : FromTReturn<Task>(returnValue);
-                return ToTReturn(ContinuationAction(previousTask, instance, state, exception));
+                _previousTask = returnValue == null ? null : FromTReturn<Task>(returnValue);
+                _target = instance;
+                _state = state;
+                _exception = exception;
+
+                // Force the creation of the task *before* calling OnCompleted
+                var task = _builder.Task;
+
+                OnCompleted();
+
+                return ToTReturn(task);
             }
 
-            private async Task ContinuationAction(Task previousTask, TTarget target, CallTargetState state, Exception exception)
+            private void OnCompleted()
             {
-                if (previousTask is not null)
+                // Detect the case when we're coming back from awaiting the continuation
+                if (_continuationAwaiter?.IsCompleted == true)
                 {
-                    if (!previousTask.IsCompleted)
+                    goto awaited;
+                }
+
+                if (_previousTask is not null)
+                {
+                    if (!_previousTask.IsCompleted)
                     {
-                        await new NoThrowAwaiter(previousTask, _preserveContext);
+                        _previousTask.ConfigureAwait(_preserveContext).GetAwaiter().OnCompleted(_onCompleted);
+                        return;
                     }
 
-                    if (previousTask.Status == TaskStatus.Faulted)
+                    if (_previousTask.Status == TaskStatus.Faulted)
                     {
-                        exception ??= previousTask.Exception?.GetBaseException();
+                        _exception ??= _previousTask.Exception?.GetBaseException();
                     }
-                    else if (previousTask.Status == TaskStatus.Canceled)
+                    else if (_previousTask.Status == TaskStatus.Canceled)
                     {
                         try
                         {
                             // The only supported way to extract the cancellation exception is to await the task
-                            await previousTask.ConfigureAwait(_preserveContext);
+                            _previousTask.ConfigureAwait(_preserveContext).GetAwaiter().GetResult();
                         }
                         catch (Exception ex)
                         {
-                            exception ??= ex;
+                            _exception ??= ex;
                         }
                     }
                 }
@@ -176,19 +209,40 @@ namespace Datadog.Trace.ClrProfiler.CallTarget.Handlers.Continuations
                     // *
                     // Calls the CallTarget integration continuation, exceptions here should never bubble up to the application
                     // *
-                    await _asyncContinuation(target, null, exception, in state).ConfigureAwait(_preserveContext);
+                    var continuationAwaiter = _asyncContinuation(_target, null, _exception, in _state).ConfigureAwait(_preserveContext).GetAwaiter();
+
+                    _continuationAwaiter = continuationAwaiter;
+
+                    if (!continuationAwaiter.IsCompleted)
+                    {
+                        continuationAwaiter.OnCompleted(_onCompleted);
+                        return;
+                    }
                 }
                 catch (Exception ex)
                 {
                     IntegrationOptions<TIntegration, TTarget>.LogException(ex);
                 }
 
-                // *
-                // If the original task throws an exception we rethrow it here.
-                // *
-                if (exception != null)
+                awaited:
+
+                try
                 {
-                    ExceptionDispatchInfo.Capture(exception).Throw();
+                    // Extract and log the exception, if any
+                    _continuationAwaiter?.GetResult();
+                }
+                catch (Exception ex)
+                {
+                    IntegrationOptions<TIntegration, TTarget>.LogException(ex);
+                }
+
+                if (_exception != null)
+                {
+                    _builder.SetException(_exception);
+                }
+                else
+                {
+                    _builder.SetResult();
                 }
             }
         }

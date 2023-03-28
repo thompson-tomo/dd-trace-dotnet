@@ -10,6 +10,7 @@ using BenchmarkDotNet.Running;
 using Datadog.Trace.BenchmarkDotNet;
 using BenchmarkDotNet.Exporters.Json;
 using BenchmarkDotNet.Filters;
+using Benchmarks.Trace.microbenchmarks;
 
 namespace Benchmarks.Trace
 {
@@ -17,8 +18,28 @@ namespace Benchmarks.Trace
     {
         private static void Main(string[] args)
         {
-            Console.WriteLine($"Execution context: ");
-            Console.WriteLine("CurrentCulture is {0}.", CultureInfo.CurrentCulture.Name);
+            ////Console.WriteLine($"Execution context: ");
+            ////Console.WriteLine("CurrentCulture is {0}.", CultureInfo.CurrentCulture.Name);
+
+            //new ContinuationBenchmark().SendAsync();
+
+            BenchmarkRunner.Run<ContinuationBenchmark>();
+
+            return;
+            ////var benchmark = new ContinuationBenchmark();
+
+            ////JetBrains.Profiler.Api.MemoryProfiler.CollectAllocations(true);
+
+            ////JetBrains.Profiler.Api.MemoryProfiler.GetSnapshot();
+
+            ////for (int i = 0; i < 10; i++)
+            ////{
+            ////    _ = benchmark.SendAsync();
+            ////}
+
+            ////JetBrains.Profiler.Api.MemoryProfiler.GetSnapshot();
+
+            //return;
 
             if (args?.Any(a => a == "-jetbrains") == true)
             {
@@ -48,6 +69,8 @@ namespace Benchmarks.Trace
 
         private static void ExecuteWithJetbrainsTools(string[] args)
         {
+            new ContinuationBenchmark().SendAsync();
+
             var numIter = 100_000;
             var numArg = args.FirstOrDefault(a => a.StartsWith("-n:", StringComparison.OrdinalIgnoreCase))?.Substring(3);
             if (int.TryParse(numArg, out var numArgInt))
