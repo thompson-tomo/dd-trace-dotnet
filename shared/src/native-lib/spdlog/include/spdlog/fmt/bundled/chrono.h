@@ -225,7 +225,7 @@ To safe_duration_cast(std::chrono::duration<FromRep, FromPeriod> from,
                       int& ec) {
   using From = std::chrono::duration<FromRep, FromPeriod>;
   ec = 0;
-  if (std::isnan(from.count())) {
+  if (isnan(from.count())) {
     // nan in, gives nan out. easy.
     return To{std::numeric_limits<typename To::rep>::quiet_NaN()};
   }
