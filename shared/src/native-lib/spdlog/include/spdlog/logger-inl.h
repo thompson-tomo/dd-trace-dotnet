@@ -12,6 +12,8 @@
 #include <spdlog/pattern_formatter.h>
 
 #include <cstdio>
+#include <iomanip>
+#include <sstream>
 
 namespace spdlog {
 
@@ -245,12 +247,14 @@ SPDLOG_INLINE void logger::err_handler_(const std::string &msg)
         }
         last_report_time = now;
         auto tm_time = details::os::localtime(system_clock::to_time_t(now));
-        char date_buf[64];
-        std::strftime(date_buf, sizeof(date_buf), "%Y-%m-%d %H:%M:%S", &tm_time);
+        std::ostringstream oss;
+        oss << std::put_time(&tm_time, "%Y-%m-%d %H:%M:%S");
+        auto str = oss.str();
+
 #if defined(USING_R) && defined(R_R_H) // if in R environment
-        REprintf("[*** LOG ERROR #%04zu ***] [%s] [%s] {%s}\n", err_counter, date_buf, name().c_str(), msg.c_str());
+        REprintf("[*** LOG ERROR #%04zu ***] [%s] [%s] {%s}\n", err_counter, str.c_str(), name().c_str(), msg.c_str());
 #else
-        std::fprintf(stderr, "[*** LOG ERROR #%04zu ***] [%s] [%s] {%s}\n", err_counter, date_buf, name().c_str(), msg.c_str());
+        std::fprintf(stderr, "[*** LOG ERROR #%04zu ***] [%s] [%s] {%s}\n", err_counter, str.c_str(), name().c_str(), msg.c_str());
 #endif
     }
 }

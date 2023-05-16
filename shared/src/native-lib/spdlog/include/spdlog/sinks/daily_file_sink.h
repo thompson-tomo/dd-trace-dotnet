@@ -94,6 +94,7 @@ private:
 #    pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 
+#ifdef SPDLOG_USE_STD_FORMAT
     static size_t strftime(char *str, size_t count, const char *format, const std::tm *time)
     {
         return std::strftime(str, count, format, time);
@@ -103,6 +104,7 @@ private:
     {
         return std::wcsftime(str, count, format, time);
     }
+#endif
 
 #if defined(__GNUC__)
 #    pragma GCC diagnostic pop
