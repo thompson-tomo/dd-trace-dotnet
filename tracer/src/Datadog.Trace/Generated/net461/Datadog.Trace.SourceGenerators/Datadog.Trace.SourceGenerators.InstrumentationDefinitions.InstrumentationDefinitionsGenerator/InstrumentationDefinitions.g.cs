@@ -146,6 +146,9 @@ namespace Datadog.Trace.ClrProfiler
                new ("Grpc.Core", "Grpc.Core.Internal.ServerStreamingServerCallHandler`2", "HandleCall",  new[] { "System.Threading.Tasks.Task", "Grpc.Core.Internal.ServerRpcNew", "Grpc.Core.Internal.CompletionQueueSafeHandle" }, 2, 0, 0, 2, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcLegacy.Server.ServerCallHandlerInstrumentation"),
                new ("Grpc.Core", "Grpc.Core.Internal.UnaryServerCallHandler`2", "HandleCall",  new[] { "System.Threading.Tasks.Task", "Grpc.Core.Internal.ServerRpcNew", "Grpc.Core.Internal.CompletionQueueSafeHandle" }, 2, 0, 0, 2, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcLegacy.Server.ServerCallHandlerInstrumentation"),
 
+                // Hangfire
+               new ("Hangfire.Core", "Hangfire.GlobalJobFilters", ".cctor",  new[] { "System.Void" }, 1, 0, 0, 1, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.Hangfire.HangfireIntegration"),
+
                 // HotChocolate
                new ("HotChocolate.Execution", "HotChocolate.Execution.Processing.MutationExecutor", "ExecuteAsync",  new[] { "System.Threading.Tasks.Task`1<HotChocolate.Execution.IExecutionResult>", "HotChocolate.Execution.Processing.IOperationContext" }, 11, 0, 0, 11, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.HotChocolate.ExecuteAsyncIntegrationExtra"),
                new ("HotChocolate.Execution", "HotChocolate.Execution.Processing.QueryExecutor", "ExecuteAsync",  new[] { "System.Threading.Tasks.Task`1<HotChocolate.Execution.IExecutionResult>", "HotChocolate.Execution.Processing.IOperationContext" }, 11, 0, 0, 12, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.HotChocolate.ExecuteAsyncIntegrationExtra"),
@@ -665,6 +668,8 @@ namespace Datadog.Trace.ClrProfiler
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcLegacy.Server.ServerCallHandlerInstrumentation"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcLegacy.Server.ServerCallHandlerInstrumentation"
                     => Datadog.Trace.Configuration.IntegrationId.Grpc,
+                "Datadog.Trace.ClrProfiler.AutoInstrumentation.Hangfire.HangfireIntegration"
+                    => Datadog.Trace.Configuration.IntegrationId.Hangfire,
                 "Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.HotChocolate.ExecuteAsyncIntegrationExtra"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.HotChocolate.ExecuteAsyncIntegrationExtra"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.HotChocolate.ExecuteAsyncIntegrationExtraV13"

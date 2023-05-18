@@ -149,6 +149,9 @@ namespace Datadog.Trace.ClrProfiler
                new ("Grpc.Net.Client", "Grpc.Net.Client.Internal.GrpcCall`2", "FinishCall",  new[] { "System.Void", "System.Net.Http.HttpRequestMessage", "System.Boolean", "System.Diagnostics.Activity", "System.Nullable`1[Grpc.Core.Status]" }, 2, 0, 0, 2, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcDotNet.GrpcNetClient.GrpcCallFinishCallPre243Integration"),
                new ("Grpc.Net.Client", "Grpc.Net.Client.Internal.GrpcCall`2", "RunCall",  new[] { "System.Threading.Tasks.Task", "System.Net.Http.HttpRequestMessage", "System.Nullable`1[System.TimeSpan]" }, 2, 0, 0, 2, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcDotNet.GrpcNetClient.GrpcCallRunCallIntegration"),
 
+                // Hangfire
+               new ("Hangfire.Core", "Hangfire.GlobalJobFilters", ".cctor",  new[] { "System.Void" }, 1, 0, 0, 1, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.Hangfire.HangfireIntegration"),
+
                 // HotChocolate
                new ("HotChocolate.Execution", "HotChocolate.Execution.Processing.MutationExecutor", "ExecuteAsync",  new[] { "System.Threading.Tasks.Task`1<HotChocolate.Execution.IExecutionResult>", "HotChocolate.Execution.Processing.IOperationContext" }, 11, 0, 0, 11, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.HotChocolate.ExecuteAsyncIntegrationExtra"),
                new ("HotChocolate.Execution", "HotChocolate.Execution.Processing.QueryExecutor", "ExecuteAsync",  new[] { "System.Threading.Tasks.Task`1<HotChocolate.Execution.IExecutionResult>", "HotChocolate.Execution.Processing.IOperationContext" }, 11, 0, 0, 12, 65535, 65535, assemblyFullName, "Datadog.Trace.ClrProfiler.AutoInstrumentation.GraphQL.HotChocolate.ExecuteAsyncIntegrationExtra"),
@@ -683,6 +686,8 @@ namespace Datadog.Trace.ClrProfiler
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcDotNet.GrpcNetClient.GrpcCallFinishCallPre243Integration"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.Grpc.GrpcDotNet.GrpcNetClient.GrpcCallRunCallIntegration"
                     => Datadog.Trace.Configuration.IntegrationId.Grpc,
+                "Datadog.Trace.ClrProfiler.AutoInstrumentation.Hangfire.HangfireIntegration"
+                    => Datadog.Trace.Configuration.IntegrationId.Hangfire,
                 "Datadog.Trace.ClrProfiler.AutoInstrumentation.HashAlgorithm.HashAlgorithmIntegration"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.HashAlgorithm.HashAlgorithmIntegrationBis"
                     or "Datadog.Trace.ClrProfiler.AutoInstrumentation.HashAlgorithm.HashAlgorithmIntegrationBis"
