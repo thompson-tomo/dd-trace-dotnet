@@ -516,9 +516,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Security.AspNetCore
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Security.AspNetCore2", "tracer\test\test-applications\security\Samples.Security.AspNetCore2\Samples.Security.AspNetCore2.csproj", "{C5E7978A-DE2A-4944-86DB-4721A110E720}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Datadog.Trace.Trimming", "tracer\src\Datadog.Trace.Trimming\Datadog.Trace.Trimming.csproj", "{CEAC4ECE-1BFA-4C88-BED5-E4DE054D70A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Datadog.Trace.Trimming", "tracer\src\Datadog.Trace.Trimming\Datadog.Trace.Trimming.csproj", "{CEAC4ECE-1BFA-4C88-BED5-E4DE054D70A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Trimming", "tracer\test\test-applications\integrations\Samples.Trimming\Samples.Trimming.csproj", "{289713D4-5259-4CC4-8CAA-DBF3BDCDCBC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Trimming", "tracer\test\test-applications\integrations\Samples.Trimming\Samples.Trimming.csproj", "{289713D4-5259-4CC4-8CAA-DBF3BDCDCBC0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ActivitySampleHelper", "tracer\test\test-applications\integrations\dependency-libs\ActivitySampleHelper\ActivitySampleHelper.csproj", "{51AF3B29-D107-4E22-8A85-DF02A8A898E5}"
 EndProject
@@ -526,7 +526,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Probes.Unreferenced
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sandbox.LegacySecurityPolicy", "tracer\test\test-applications\regression\Sandbox.LegacySecurityPolicy\Sandbox.LegacySecurityPolicy.csproj", "{959E9599-8D99-43BC-8038-B91F76179C1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepNestedHierarchy", "tracer\test\test-applications\regression\DeepNestedHierarchy\DeepNestedHierarchy.csproj", "{1B3E6BEE-F7AB-433E-A1D9-E8BE3782419B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeepNestedHierarchy", "tracer\test\test-applications\regression\DeepNestedHierarchy\DeepNestedHierarchy.csproj", "{1B3E6BEE-F7AB-433E-A1D9-E8BE3782419B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.ServiceRemotingV1", "tracer\test\test-applications\integrations\Samples.ServiceRemotingV1\Samples.ServiceRemotingV1.csproj", "{A1CC6B5C-D1ED-4358-B17B-D7AE56D33EEA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceRemotingHelper", "tracer\test\test-applications\integrations\dependency-libs\ServiceRemotingHelper\ServiceRemotingHelper.csproj", "{7A3E702A-D2BF-4596-B824-519CB24AFBD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1252,6 +1256,14 @@ Global
 		{1B3E6BEE-F7AB-433E-A1D9-E8BE3782419B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B3E6BEE-F7AB-433E-A1D9-E8BE3782419B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B3E6BEE-F7AB-433E-A1D9-E8BE3782419B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1CC6B5C-D1ED-4358-B17B-D7AE56D33EEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1CC6B5C-D1ED-4358-B17B-D7AE56D33EEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1CC6B5C-D1ED-4358-B17B-D7AE56D33EEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1CC6B5C-D1ED-4358-B17B-D7AE56D33EEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A3E702A-D2BF-4596-B824-519CB24AFBD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A3E702A-D2BF-4596-B824-519CB24AFBD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A3E702A-D2BF-4596-B824-519CB24AFBD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A3E702A-D2BF-4596-B824-519CB24AFBD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1456,6 +1468,8 @@ Global
 		{DE15D292-DC01-4AEA-B473-C2F2908341A7} = {0884B566-D22E-498C-BAA9-26D50ABCAE3A}
 		{959E9599-8D99-43BC-8038-B91F76179C1C} = {498A300E-D036-49B7-A43D-821D1CAF11A5}
 		{1B3E6BEE-F7AB-433E-A1D9-E8BE3782419B} = {498A300E-D036-49B7-A43D-821D1CAF11A5}
+		{A1CC6B5C-D1ED-4358-B17B-D7AE56D33EEA} = {BAF8F246-3645-42AD-B1D0-0F7EAFBAB34A}
+		{7A3E702A-D2BF-4596-B824-519CB24AFBD5} = {8683D82A-2BBE-4199-9C36-C59F48804F90}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {160A1D00-1F5B-40F8-A155-621B4459D78F}
