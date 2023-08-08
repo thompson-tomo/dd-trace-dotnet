@@ -43,8 +43,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.0.0" PrivateAssets="All" />
-
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.4.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +51,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+
+    <!-- Include System.Diagnostics.DiagnosticSource, which is built-in on netcoreapp3.1 and net6.0 -->
+    <!-- This is not built-in on netstandard2.0. In order to use classes such as DiagnosticListener to track AspNetCore events on netcoreapp2.0,
+          we use package version 4.4.1 which uses the System.Diagnostics.DiagnosticSource from the runtime -->
+    <!-- This is not built-in on net461. We do not actually use any types from the assembly so no AssemblyReference is written into Datadog.Trace.
+          This will be used to guarantee that IF manual instrumentation is being used, we can use reflection to look up System.Diagnostics.DiagnosticSource and its types. -->
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.4.1" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
