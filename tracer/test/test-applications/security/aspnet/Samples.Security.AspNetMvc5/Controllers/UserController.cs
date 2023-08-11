@@ -7,6 +7,8 @@ namespace Samples.AspNetMvc5.Controllers
 {
     public class UserController : Controller
     {
+        private readonly ITracer _tracer = TracerProviderBuilder.Create().Build().GetTracer();
+
         [ValidateInput(false)]
         public ActionResult Index()
         {
@@ -16,7 +18,7 @@ namespace Samples.AspNetMvc5.Controllers
             {
                 Id = userId,
             };
-            Tracer.Instance.ActiveScope?.Span.SetUser(userDetails);
+            _tracer.ActiveScope?.Span.SetUser(userDetails);
 
             return View();
         }

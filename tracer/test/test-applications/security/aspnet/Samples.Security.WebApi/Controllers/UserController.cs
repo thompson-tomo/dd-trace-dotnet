@@ -7,6 +7,8 @@ namespace Samples.Security.WebApi.Controllers
 {
     public class UserController : ApiController
     {
+        private readonly ITracer _tracer = TracerProviderBuilder.Create().Build().GetTracer();
+
         // GET api/user
         public string Get()
         {
@@ -24,7 +26,7 @@ namespace Samples.Security.WebApi.Controllers
             {
                 Id = userId,
             };
-            Tracer.Instance.ActiveScope?.Span.SetUser(userDetails);
+            _tracer.ActiveScope?.Span.SetUser(userDetails);
 
             return userId;
         }

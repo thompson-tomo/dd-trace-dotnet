@@ -916,6 +916,7 @@ HRESULT CorProfiler::TryRejitModule(ModuleID module_id, std::vector<ModuleID>& m
                 else
                 {
                     RewriteForDistributedTracing(module_metadata, module_id);
+                    RewriteForDistributedConfiguration(module_metadata, module_id);
                 }
             }
         }
@@ -2488,7 +2489,6 @@ HRESULT CorProfiler::RewriteForDistributedTracing(const ModuleMetadata& module_m
     ILRewriter getterRewriter(this->info_, nullptr, module_id, getDistributedTraceMethodDef);
     getterRewriter.InitializeTiny();
 
-    // Modify first instruction from ldnull to call
     ILRewriterWrapper getterWrapper(&getterRewriter);
     getterWrapper.SetILPosition(getterRewriter.GetILList()->m_pNext);
     getterWrapper.CallMember(targetMemberRef, false);
@@ -2508,6 +2508,210 @@ HRESULT CorProfiler::RewriteForDistributedTracing(const ModuleMetadata& module_m
     {
         Logger::Info(GetILCodes("After -> GetDistributedTracer. ", &getterRewriter,
                                 GetFunctionInfo(module_metadata.metadata_import, getDistributedTraceMethodDef),
+                                module_metadata.metadata_import));
+    }
+
+    return hr;
+}
+
+HRESULT CorProfiler::RewriteForDistributedConfiguration(const ModuleMetadata& module_metadata, ModuleID module_id)
+{
+    HRESULT hr = S_OK;
+
+    LogManagedProfilerAssemblyDetails();
+
+    //
+    // *** Get (Manual) TracerProviderBuilder TypeDef
+    //
+    mdTypeDef tracerProviderBuilderTypeDef;
+    hr = module_metadata.metadata_import->FindTypeDefByName(distributed_configuration_source_type_name.c_str(),
+                                                            mdTokenNil, &tracerProviderBuilderTypeDef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Configuration on getting TracerProviderBuilder TypeDef");
+        return hr;
+    }
+
+    //
+    // *** Get (Manual) TracerProvider TypeDef
+    //
+    mdTypeDef tracerProviderTypeDef;
+    hr = module_metadata.metadata_import->FindTypeDefByName(distributed_configuration_tracer_provider_source_type_name.c_str(),
+                                                            mdTokenNil, &tracerProviderTypeDef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Configuration on getting TracerProvider TypeDef");
+        return hr;
+    }
+
+    //
+    // *** Get (Manual) Tracer TypeDef
+    //
+    mdTypeDef manualTracerTypeDef;
+    hr = module_metadata.metadata_import->FindTypeDefByName(distributed_configuration_target_type_name.c_str(),
+                                                            mdTokenNil, &manualTracerTypeDef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Configuration on getting source Tracer TypeDef");
+        return hr;
+    }
+
+    //
+    // *** Import Current Version of assembly
+    //
+    mdAssemblyRef managed_profiler_assemblyRef;
+    hr = module_metadata.assembly_emit->DefineAssemblyRef(
+        managed_profiler_assembly_property.ppbPublicKey, managed_profiler_assembly_property.pcbPublicKey,
+        managed_profiler_assembly_property.szName.data(), &managed_profiler_assembly_property.pMetaData,
+        &managed_profiler_assembly_property.pulHashAlgId, sizeof(managed_profiler_assembly_property.pulHashAlgId),
+        managed_profiler_assembly_property.assemblyFlags, &managed_profiler_assemblyRef);
+
+    if (FAILED(hr) || managed_profiler_assemblyRef == mdAssemblyRefNil)
+    {
+        Logger::Warn("Error rewriting for Distributed Configuration on getting ManagedProfiler AssemblyRef");
+        return hr;
+    }
+
+    mdTypeRef automaticTracerTypeRef;
+    hr = module_metadata.metadata_emit->DefineTypeRefByName(
+        managed_profiler_assemblyRef, distributed_configuration_target_type_name.c_str(), &automaticTracerTypeRef);
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Configuration on getting Tracer TypeRef");
+        return hr;
+    }
+
+    //
+    // *** Source (TracerProviderBuilder.ConfigureFromManual) MethodDef ***
+    //
+    constexpr COR_SIGNATURE configureFromManualSignature[] = {IMAGE_CEE_CS_CALLCONV_DEFAULT, 0x01, ELEMENT_TYPE_VOID, ELEMENT_TYPE_OBJECT};
+    mdMethodDef configureFromManualMethodDef;
+    hr = module_metadata.metadata_import->FindMethod(tracerProviderBuilderTypeDef, WStr("ConfigureFromManual"),
+                                                     configureFromManualSignature, 4, &configureFromManualMethodDef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Configuration on getting ConfigureFromManual MethodDef");
+        return hr;
+    }
+
+    //
+    // *** Source (TracerProvider.GetTracerInternal) MethodDef ***
+    //
+    constexpr COR_SIGNATURE getTracerSignature[] = {
+        IMAGE_CEE_CS_CALLCONV_DEFAULT, // Calling convention
+        0,                             // Number of parameters
+        ELEMENT_TYPE_OBJECT,           // Return type
+    };
+
+    mdMethodDef getTracerManualMethodDef;
+    hr = module_metadata.metadata_import->FindMethod(tracerProviderTypeDef, WStr("GetTracerInternal"),
+                                                     getTracerSignature, 3, &getTracerManualMethodDef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Configuration on getting ConfigureFromManual MethodDef");
+        return hr;
+    }
+
+    //
+    // *** Target (Tracer.ConfigureFromManual) MemberRef ***
+    //
+    COR_SIGNATURE targetSignature[500];
+    unsigned offset = 0;
+    targetSignature[offset++] = IMAGE_CEE_CS_CALLCONV_DEFAULT;
+    targetSignature[offset++] = 0x01;
+    targetSignature[offset++] = ELEMENT_TYPE_VOID;
+    targetSignature[offset++] = ELEMENT_TYPE_OBJECT;
+
+    // Uncomment the below when we actually pass the input as Dictionary<string,string> instead of ELEMENT_TYPE_OBJECT
+    /*
+    unsigned type_buffer;
+    auto type_size = CorSigCompressToken(typeRef, &type_buffer);
+    memcpy(&targetSignature[offset], &type_buffer, type_size);
+    */
+
+
+
+    mdMemberRef manualTargetMemberRef;
+    hr = module_metadata.metadata_import->FindMethod(manualTracerTypeDef,
+                                                        distributed_configuration_target_method_name.c_str(), targetSignature,
+                                                        4, &manualTargetMemberRef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Tracing on the manual ConfigureFromManual MemberRef");
+        return hr;
+    }
+
+    mdMemberRef automaticTargetMemberRef;
+    hr = module_metadata.metadata_emit->DefineMemberRef(automaticTracerTypeRef,
+                                                        distributed_configuration_target_method_name.c_str(), targetSignature,
+                                                        4, &automaticTargetMemberRef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Tracing on defining Automatic ConfigureFromManual MemberRef");
+        return hr;
+    }
+
+    mdMemberRef automaticGetTracerMemberRef;
+    hr = module_metadata.metadata_emit->DefineMemberRef(automaticTracerTypeRef,
+                                                        distributed_gettracer_target_method_name.c_str(), getTracerSignature,
+                                                        3, &automaticGetTracerMemberRef);
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting for Distributed Tracing on defining Automatic GetTracerInternal MemberRef");
+        return hr;
+    }
+
+    ILRewriter configureRewriter(this->info_, nullptr, module_id, configureFromManualMethodDef);
+    configureRewriter.InitializeTiny();
+
+    // Replace calls to the automatic instrumentation assembly
+    ILRewriterWrapper configureWrapper(&configureRewriter);
+    configureWrapper.SetILPosition(configureRewriter.GetILList()->m_pNext);
+    configureWrapper.LoadArgument(0);
+    configureWrapper.CallMember(automaticTargetMemberRef, false);
+    configureWrapper.Return();
+
+    hr = configureRewriter.Export();
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting ConfigureFromManual->[AutoInstrumentation]Tracer.ConfigureFromManual");
+        return hr;
+    }
+
+    Logger::Info("Rewriting ConfigureFromManual->[AutoInstrumentation]Tracer.ConfigureFromManual");
+
+    if (IsDumpILRewriteEnabled())
+    {
+        Logger::Info(GetILCodes("After -> ConfigureFromManual. ", &configureRewriter,
+                                GetFunctionInfo(module_metadata.metadata_import, configureFromManualMethodDef),
+                                module_metadata.metadata_import));
+    }
+
+    ILRewriter getTracerRewriter(this->info_, nullptr, module_id, getTracerManualMethodDef);
+    getTracerRewriter.InitializeTiny();
+
+    // Replace calls to the automatic instrumentation assembly
+    ILRewriterWrapper getTracerWrapper(&getTracerRewriter);
+    getTracerWrapper.SetILPosition(getTracerRewriter.GetILList()->m_pNext);
+    getTracerWrapper.CallMember(automaticGetTracerMemberRef, false);
+    getTracerWrapper.Return();
+
+    hr = getTracerRewriter.Export();
+
+    if (FAILED(hr))
+    {
+        Logger::Warn("Error rewriting GetTracerInternal->[AutoInstrumentation]Tracer.Instance");
+        return hr;
+    }
+
+    Logger::Info("Rewriting GetTracerInternal->[AutoInstrumentation]Tracer.Instance");
+
+    if (IsDumpILRewriteEnabled())
+    {
+        Logger::Info(GetILCodes("After -> GetTracerInternal. ", &getTracerRewriter,
+                                GetFunctionInfo(module_metadata.metadata_import, getTracerManualMethodDef),
                                 module_metadata.metadata_import));
     }
 

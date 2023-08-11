@@ -11,6 +11,7 @@ using Datadog.Trace.Agent;
 using Datadog.Trace.Agent.DiscoveryService;
 using Datadog.Trace.ClrProfiler;
 using Datadog.Trace.Configuration;
+using Datadog.Trace.Configuration.Telemetry;
 using Datadog.Trace.Sampling;
 using Datadog.Trace.SourceGenerators;
 using Datadog.Trace.Tagging;
@@ -232,11 +233,6 @@ namespace Datadog.Trace
         /// </summary>
         IScope ITracer.ActiveScope => ActiveScope;
 
-        /// <summary>
-        /// Gets this tracer's settings.
-        /// </summary>
-        ImmutableTracerSettings ITracer.Settings => Settings;
-
         internal static string RuntimeId => DistributedTracer.Instance.GetRuntimeId();
 
         internal static int LiveTracerCount => _liveTracerCount;
@@ -255,6 +251,28 @@ namespace Datadog.Trace
                 return TracerManager.PerTraceSettings;
             }
         }
+
+        // We should make this strongly typed before release, but for POC let's make this of type object
+#pragma warning disable SA1600 // Elements should be documented
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public static void ConfigureFromManual(object settings)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore SA1600 // Elements should be documented
+        {
+            TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_Configure);
+            var settingsDictionary = settings as Dictionary<string, string>;
+            ImmutableTracerSettings immutableSettings = settings is null
+                                                            ? null
+                                                            : new ImmutableTracerSettings(new(new DictionaryConfigurationSource(settingsDictionary), new ConfigurationTelemetry()), true);
+            ConfigureInternal(immutableSettings);
+        }
+
+        // We should make this strongly typed before release, but for POC let's make this of type object
+#pragma warning disable SA1600 // Elements should be documented
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public static object GetTracerInternal() => Tracer.Instance;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore SA1600 // Elements should be documented
 
         /// <summary>
         /// Replaces the global Tracer settings used by all <see cref="Tracer"/> instances,
@@ -298,16 +316,6 @@ namespace Datadog.Trace
             TelemetryFactory.Metrics.Record(PublicApiUsage.ITracer_StartActive);
             TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.Manual);
             return StartActiveInternal(operationName);
-        }
-
-        /// <inheritdoc cref="ITracer" />
-        [PublicApi]
-        IScope ITracer.StartActive(string operationName, SpanCreationSettings settings)
-        {
-            TelemetryFactory.Metrics.Record(PublicApiUsage.ITracer_StartActive_Settings);
-            TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.Manual);
-            var finishOnClose = settings.FinishOnClose ?? true;
-            return StartActiveInternal(operationName, settings.Parent, serviceName: null, settings.StartTime, finishOnClose);
         }
 
         /// <summary>

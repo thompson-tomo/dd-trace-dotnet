@@ -401,9 +401,7 @@ namespace Datadog.Trace
     public interface ITracer
     {
         Datadog.Trace.IScope ActiveScope { get; }
-        Datadog.Trace.Configuration.ImmutableTracerSettings Settings { get; }
         Datadog.Trace.IScope StartActive(string operationName);
-        Datadog.Trace.IScope StartActive(string operationName, Datadog.Trace.SpanCreationSettings settings);
     }
     public enum SamplingPriority
     {
@@ -509,6 +507,18 @@ namespace Datadog.Trace
         public Datadog.Trace.IScope StartActive(string operationName) { }
         public Datadog.Trace.IScope StartActive(string operationName, Datadog.Trace.SpanCreationSettings settings) { }
         public static void Configure(Datadog.Trace.Configuration.TracerSettings settings) { }
+        public static void ConfigureFromManual(object settings) { }
+        public static object GetTracerInternal() { }
+    }
+    public class TracerProvider
+    {
+        public Datadog.Trace.ITracer GetTracer() { }
+    }
+    public class TracerProviderBuilder
+    {
+        public Datadog.Trace.TracerProviderBuilder AddSetting(string key, string? value) { }
+        public Datadog.Trace.TracerProvider Build() { }
+        public static Datadog.Trace.TracerProviderBuilder Create() { }
     }
     public struct UserDetails
     {

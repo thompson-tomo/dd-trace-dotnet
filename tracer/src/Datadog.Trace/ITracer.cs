@@ -19,24 +19,11 @@ namespace Datadog.Trace
         IScope ActiveScope { get; }
 
         /// <summary>
-        /// Gets this tracer's settings.
-        /// </summary>
-        ImmutableTracerSettings Settings { get; }
-
-        /// <summary>
         /// This creates a new span with the given parameters and makes it active.
         /// </summary>
         /// <param name="operationName">The span's operation name</param>
         /// <returns>A scope wrapping the newly created span</returns>
         [PublicApi]
         IScope StartActive(string operationName);
-
-        /// <summary>
-        /// This creates a new span with the given parameters and makes it active.
-        /// </summary>
-        /// <param name="operationName">The span's operation name</param>
-        /// <param name="settings">Settings for the new <see cref="IScope"/></param>
-        /// <returns>A scope wrapping the newly created span</returns>
-        IScope StartActive(string operationName, SpanCreationSettings settings);
     }
 }

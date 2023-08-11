@@ -10,6 +10,8 @@ namespace Samples.Security.WebForms
 {
     public partial class User : Page
     {
+        private readonly ITracer _tracer = TracerProviderBuilder.Create().Build().GetTracer();
+
         protected void Page_Load(object sender, EventArgs e)
         {
             var userId = "user3";
@@ -18,7 +20,7 @@ namespace Samples.Security.WebForms
             {
                 Id = userId,
             };
-            Tracer.Instance.ActiveScope?.Span.SetUser(userDetails);
+            _tracer.ActiveScope?.Span.SetUser(userDetails);
         }
     }
 }
