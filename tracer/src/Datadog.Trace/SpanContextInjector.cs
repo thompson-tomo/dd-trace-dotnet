@@ -4,10 +4,7 @@
 // </copyright>
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Datadog.Trace.DataStreamsMonitoring;
-using Datadog.Trace.Logging;
+using Datadog.Trace.DuckTyping;
 using Datadog.Trace.Propagators;
 using Datadog.Trace.SourceGenerators;
 using Datadog.Trace.Telemetry;
@@ -21,15 +18,56 @@ namespace Datadog.Trace
     /// The SpanContextInjector is responsible for injecting SpanContext in the rare cases where the Tracer couldn't propagate it itself.
     /// This can happen for instance when we don't support a specific library
     /// </summary>
-    public class SpanContextInjector
+    public class SpanContextInjector : ISpanContextInjector
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SpanContextInjector"/> class
         /// </summary>
         [PublicApi]
-        public SpanContextInjector()
+        private SpanContextInjector()
         {
             TelemetryFactory.Metrics.Record(PublicApiUsage.SpanContextInjector_Ctor);
+        }
+
+        private interface IInternalSpanContextInjector
+        {
+            void Inject<TCarrier>(TCarrier carrier, Action<TCarrier, string, string> setter, object context);
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is fine for POC")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public static ISpanContextInjector Create()
+        {
+            var spanContextInjector = CreateSpanContextInjectorInternal();
+            if (spanContextInjector is SpanContextInjector manualSpanContextInjectorTracer)
+            {
+                return manualSpanContextInjectorTracer;
+            }
+            else if (spanContextInjector.TryDuckCast<IInternalSpanContextInjector>(out var automaticSpanContextInjectorTracer))
+            {
+                var targetSpanContextType = spanContextInjector.GetType().Assembly.GetType(typeof(ISpanContext).FullName!, throwOnError: false);
+                return new SpanContextInjectorWrapper(automaticSpanContextInjectorTracer, targetSpanContextType);
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "DD0002:Incorrect usage of public API", Justification = "This is fine for POC")]
+        internal static object CreateSpanContextInjectorInternal()
+        {
+            var tracerType = TracerProvider.GetTracerInternal().GetType();
+            var spanContextInjectorType = tracerType.Assembly.GetType(typeof(SpanContextInjector).FullName!, throwOnError: false);
+            if (spanContextInjectorType is not null && Activator.CreateInstance(spanContextInjectorType, nonPublic: true) is object retVal)
+            {
+                return retVal;
+            }
+            else
+            {
+                return new SpanContextInjector();
+            }
         }
 
         /// <summary>
@@ -48,7 +86,52 @@ namespace Datadog.Trace
 
             if (context is SpanContext spanContext)
             {
+                // Scenario #2: The SpanContext originates from the automatic assembly
                 SpanContextPropagator.Instance.Inject(spanContext, carrier, setter);
+            }
+            else if (context.TryDuckCast<ISpanContext>(out var manualSpanContext))
+            {
+                // Scenario #1: The SpanContext originates from the manual assembly
+                SpanContextPropagator.Instance.Inject(CreateLocalSpanContext(manualSpanContext), carrier, setter);
+            }
+            else
+            {
+                // Scenario #3: We have no idea. Do nothing
+            }
+        }
+
+        private SpanContext CreateLocalSpanContext(ISpanContext context)
+            => new((TraceId)context.TraceId, context.SpanId, context.SamplingPriority, context.ServiceName, origin: null);
+
+        private class SpanContextInjectorWrapper : ISpanContextInjector
+        {
+            private IInternalSpanContextInjector _automaticInjector;
+            private Type? _targetISpanContextType;
+
+            public SpanContextInjectorWrapper(IInternalSpanContextInjector automaticInjector, Type? targetISpanContextType)
+            {
+                _automaticInjector = automaticInjector;
+                _targetISpanContextType = targetISpanContextType;
+            }
+
+            public void Inject<TCarrier>(TCarrier carrier, Action<TCarrier, string, string> setter, ISpanContext context)
+            {
+                if (context is SpanContext spanContext
+                    && _targetISpanContextType is not null
+                    && context.TryDuckCast(_targetISpanContextType, out var contextForAutomaticTracer))
+                {
+                    // Scenario #1: The SpanContext originates from the manual assembly
+                    _automaticInjector.Inject(carrier, setter, contextForAutomaticTracer);
+                }
+                else if (context is IDuckType proxySpanContext && proxySpanContext.Instance is not null)
+                {
+                    // Scenario #2: The SpanContext originates from the automatic assembly
+                    _automaticInjector.Inject(carrier, setter, proxySpanContext.Instance);
+                }
+                else
+                {
+                    // Scenario #3: We have no idea. Do nothing
+                }
             }
         }
     }

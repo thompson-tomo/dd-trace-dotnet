@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Datadog.Trace.DataStreamsMonitoring;
+using Datadog.Trace.DuckTyping;
 using Datadog.Trace.Logging;
 using Datadog.Trace.Propagators;
 using Datadog.Trace.SourceGenerators;
@@ -26,9 +27,49 @@ namespace Datadog.Trace
         /// Initializes a new instance of the <see cref="SpanContextExtractor"/> class
         /// </summary>
         [PublicApi]
-        public SpanContextExtractor()
+        private SpanContextExtractor()
         {
             TelemetryFactory.Metrics.Record(PublicApiUsage.SpanContextExtractor_Ctor);
+        }
+
+        private interface IInternalSpanContextExtractor
+        {
+            object? Extract<TCarrier>(TCarrier carrier, Func<TCarrier, string, IEnumerable<string?>> getter);
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1600:Elements should be documented", Justification = "This is fine for POC")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        public static ISpanContextExtractor Create()
+        {
+            var spanContextExtractor = CreateSpanContextExtractorInternal();
+            if (spanContextExtractor is SpanContextExtractor manualSpanContextExtractor)
+            {
+                return manualSpanContextExtractor;
+            }
+            else if (spanContextExtractor.TryDuckCast<IInternalSpanContextExtractor>(out var automaticSpanContextExtractor))
+            {
+                return new SpanContextExtractorWrapper(automaticSpanContextExtractor);
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "DD0002:Incorrect usage of public API", Justification = "This is fine for POC")]
+        internal static object CreateSpanContextExtractorInternal()
+        {
+            var tracerType = TracerProvider.GetTracerInternal().GetType();
+            var spanContextExtractorType = tracerType.Assembly.GetType(typeof(SpanContextExtractor).FullName!, throwOnError: false);
+            if (spanContextExtractorType is not null && Activator.CreateInstance(spanContextExtractorType, nonPublic: true) is object retVal)
+            {
+                return retVal;
+            }
+            else
+            {
+                return new SpanContextExtractor();
+            }
         }
 
         /// <inheritdoc />
@@ -70,6 +111,27 @@ namespace Datadog.Trace
             }
 
             return null;
+        }
+
+        private class SpanContextExtractorWrapper : ISpanContextExtractor
+        {
+            private IInternalSpanContextExtractor _automaticExtractor;
+
+            public SpanContextExtractorWrapper(IInternalSpanContextExtractor automaticExtractor)
+            {
+                _automaticExtractor = automaticExtractor;
+            }
+
+            public ISpanContext? Extract<TCarrier>(TCarrier carrier, Func<TCarrier, string, IEnumerable<string?>> getter)
+            {
+                var spanContextObject = _automaticExtractor.Extract(carrier, getter);
+                if (spanContextObject is not null && spanContextObject.TryDuckCast<ISpanContext>(out var proxySpanContext))
+                {
+                    return proxySpanContext;
+                }
+
+                return null;
+            }
         }
     }
 }

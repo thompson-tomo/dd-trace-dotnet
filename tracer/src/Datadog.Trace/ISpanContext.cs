@@ -21,6 +21,12 @@ namespace Datadog.Trace
         ulong SpanId { get; }
 
         /// <summary>
+        /// Gets the sampling priority for contexts created from incoming propagated context.
+        /// Returns null for local contexts.
+        /// </summary>
+        int? SamplingPriority { get; }
+
+        /// <summary>
         /// Gets the service name to propagate to child spans.
         /// </summary>
         string ServiceName { get; }

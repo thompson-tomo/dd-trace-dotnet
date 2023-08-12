@@ -19,14 +19,16 @@ public class TracerProvider
     {
     }
 
-    public ITracer GetTracer()
+    public ITracer GetTracer() => GetTracerInstance();
+
+    internal static IInternalTracer GetTracerInstance()
     {
         var tracer = GetTracerInternal();
         if (tracer is Tracer manualTracer)
         {
             return manualTracer;
         }
-        else if (tracer.TryDuckCast<ITracer>(out var automaticTracer))
+        else if (tracer.TryDuckCast<IInternalTracer>(out var automaticTracer))
         {
             return automaticTracer;
         }

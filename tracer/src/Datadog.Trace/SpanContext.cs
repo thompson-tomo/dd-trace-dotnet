@@ -194,6 +194,12 @@ namespace Datadog.Trace
         public ulong SpanId { get; }
 
         /// <summary>
+        /// Gets the sampling priority for contexts created from incoming propagated context.
+        /// Returns null for local contexts.
+        /// </summary>
+        public int? SamplingPriority { get; }
+
+        /// <summary>
         /// Gets or sets the service name to propagate to child spans.
         /// </summary>
         [GeneratePublicApi(PublicApiUsage.SpanContext_ServiceName_Get, PublicApiUsage.SpanContext_ServiceName_Set)]
@@ -229,12 +235,6 @@ namespace Datadog.Trace
         /// Returns null for contexts created from incoming propagated context.
         /// </summary>
         internal TraceContext TraceContext { get; }
-
-        /// <summary>
-        /// Gets the sampling priority for contexts created from incoming propagated context.
-        /// Returns null for local contexts.
-        /// </summary>
-        internal int? SamplingPriority { get; }
 
         /// <summary>
         /// Gets the trace id as a hexadecimal string of length 32,
