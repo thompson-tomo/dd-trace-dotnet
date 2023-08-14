@@ -12,6 +12,7 @@ using Datadog.Trace.Agent.DiscoveryService;
 using Datadog.Trace.ClrProfiler;
 using Datadog.Trace.Configuration;
 using Datadog.Trace.Configuration.Telemetry;
+using Datadog.Trace.DuckTyping;
 using Datadog.Trace.Sampling;
 using Datadog.Trace.SourceGenerators;
 using Datadog.Trace.Tagging;
@@ -328,6 +329,16 @@ namespace Datadog.Trace
             return StartActiveInternal(operationName);
         }
 
+        /// <inheritdoc cref="ITracer" />
+        [PublicApi]
+        IScope ITracer.StartActive(string operationName, SpanCreationSettings settings)
+        {
+            TelemetryFactory.Metrics.Record(PublicApiUsage.ITracer_StartActive_Settings);
+            TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.Manual);
+            var finishOnClose = settings.FinishOnClose ?? true;
+            return StartActiveInternal(operationName, settings.Parent, serviceName: null, settings.StartTime, finishOnClose);
+        }
+
         /// <summary>
         /// This creates a new span with the given parameters and makes it active.
         /// </summary>
@@ -354,6 +365,35 @@ namespace Datadog.Trace
             TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.Manual);
             var finishOnClose = settings.FinishOnClose ?? true;
             return StartActiveInternal(operationName, settings.Parent, serviceName: null, settings.StartTime, finishOnClose);
+        }
+
+        /// <summary>
+        /// This creates a new span with the given parameters and makes it active.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <param name="parent">The span's parent</param>
+        /// <param name="serviceName">The span's service name</param>
+        /// <param name="startTime">An explicit start time for that span</param>
+        /// <param name="finishOnClose">Whether to close the span when the returned scope is closed</param>
+        /// <returns>A scope wrapping the newly created span</returns>
+        public IScope StartActiveManual(string operationName, object parent, string serviceName, DateTimeOffset? startTime, bool? finishOnClose)
+        {
+            TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_StartActive_Settings);
+            TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.Manual);
+
+            // Might
+            ISpanContext spanContext = null;
+            if (parent is SpanContext automaticSpanContext)
+            {
+                spanContext = automaticSpanContext;
+            }
+            else if (parent is not null
+                && parent.TryDuckCast<ISpanContext>(out var manualSpanContext))
+            {
+                spanContext = CreateLocalSpanContext(manualSpanContext);
+            }
+
+            return StartActiveInternal(operationName, spanContext, serviceName: null, startTime, finishOnClose ?? true);
         }
 
         /// <summary>
@@ -540,5 +580,8 @@ namespace Datadog.Trace
         {
             return TracerManager.AgentWriter.FlushTracesAsync();
         }
+
+        private SpanContext CreateLocalSpanContext(ISpanContext context)
+            => new((TraceId)context.TraceId, context.SpanId, context.SamplingPriority, context.ServiceName, origin: null);
     }
 }

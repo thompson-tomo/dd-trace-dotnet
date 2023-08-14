@@ -19,7 +19,7 @@ public class TracerProvider
     {
     }
 
-    public ITracer GetTracer() => GetTracerInstance();
+    public ITracer GetTracer() => (ITracer)GetTracerInstance();
 
     internal static IInternalTracer GetTracerInstance()
     {
@@ -30,7 +30,7 @@ public class TracerProvider
         }
         else if (tracer.TryDuckCast<IInternalTracer>(out var automaticTracer))
         {
-            return automaticTracer;
+            return new TracerWrapper(automaticTracer);
         }
         else
         {
@@ -41,5 +41,47 @@ public class TracerProvider
     internal static object GetTracerInternal()
     {
         return Tracer.GetTracerInternal();
+    }
+
+    private class TracerWrapper : ITracer, IInternalTracer
+    {
+        private IInternalTracer _automaticTracer;
+
+        public TracerWrapper(IInternalTracer automaticTracer)
+        {
+            _automaticTracer = automaticTracer;
+        }
+
+        public IScope ActiveScope => _automaticTracer.ActiveScope;
+
+        public string? DefaultServiceName => _automaticTracer.DefaultServiceName;
+
+        public string? EnvironmentInternal => _automaticTracer.EnvironmentInternal;
+
+        public string? ServiceVersionInternal => _automaticTracer.ServiceVersionInternal;
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "DD0002:Incorrect usage of public API", Justification = "I just don't want to deal with it right now")]
+        public IScope StartActive(string operationName) => _automaticTracer.StartActive(operationName);
+
+        public IScope StartActive(string operationName, SpanCreationSettings settings)
+        {
+            return StartActiveManual(operationName, settings.Parent, serviceName: null, settings.StartTime, settings.FinishOnClose);
+        }
+
+        public IScope StartActiveManual(string operationName, object? parent, string? serviceName, DateTimeOffset? startTime, bool? finishOnClose)
+        {
+            object? automaticParent = parent switch
+            {
+                SpanContext spanContext => spanContext,
+                ISpanContext and not IDuckType => parent,
+                IDuckType context when context.Instance is not null => context.Instance,
+                _ => null,
+            };
+
+            return _automaticTracer.StartActiveManual(operationName, automaticParent, serviceName, startTime, finishOnClose);
+        }
+
+        private SpanContext CreateLocalSpanContext(ISpanContext context)
+            => new((TraceId)context.TraceId, context.SpanId, context.SamplingPriority, context.ServiceName, origin: null);
     }
 }

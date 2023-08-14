@@ -25,5 +25,14 @@ namespace Datadog.Trace
         /// <returns>A scope wrapping the newly created span</returns>
         [PublicApi]
         IScope StartActive(string operationName);
+
+        /// <summary>
+        /// This creates a new span with the given parameters and makes it active.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <param name="settings">The settings for configuring the new span</param>
+        /// <returns>A scope wrapping the newly created span</returns>
+        [PublicApi]
+        IScope StartActive(string operationName, Datadog.Trace.SpanCreationSettings settings);
     }
 }

@@ -5,13 +5,20 @@
 
 #nullable enable
 
+using System;
+
 namespace Datadog.Trace
 {
     /// <summary>
     /// The tracer is responsible for creating spans and flushing them to the Datadog agent
     /// </summary>
-    internal interface IInternalTracer : ITracer
+    internal interface IInternalTracer
     {
+        /// <summary>
+        /// Gets the active scope
+        /// </summary>
+        IScope ActiveScope { get; }
+
         /// <summary>
         /// Gets the name of the service
         /// </summary>
@@ -26,5 +33,23 @@ namespace Datadog.Trace
         /// Gets the version of the service
         /// </summary>
         string? ServiceVersionInternal { get; }
+
+        /// <summary>
+        /// This creates a new span with the given parameters and makes it active.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <returns>A scope wrapping the newly created span</returns>
+        IScope StartActive(string operationName);
+
+        /// <summary>
+        /// This creates a new span with the given parameters and makes it active.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <param name="parent">The span's parent</param>
+        /// <param name="serviceName">The span's service name</param>
+        /// <param name="startTime">The span's start time</param>
+        /// <param name="finishOnClose">Whether to close the span when the returned scope is closed</param>
+        /// <returns>A scope wrapping the newly created span</returns>
+        IScope StartActiveManual(string operationName, object? parent, string? serviceName, DateTimeOffset? startTime, bool? finishOnClose);
     }
 }
