@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Datadog.Trace;
 
 namespace Samples.WebRequest
 {
@@ -31,6 +32,9 @@ namespace Samples.WebRequest
             string port = args.FirstOrDefault(arg => arg.StartsWith("Port="))?.Split('=')[1] ?? "9000";
             Console.WriteLine($"Port {port}");
 
+            var tracerProvider = TracerProviderBuilder.Create().Build();
+            var tracer = tracerProvider.GetTracer();
+
             using (var server = WebServer.Start(port, out string url))
             {
                 server.RequestHandler = HandleHttpRequests;
@@ -41,8 +45,8 @@ namespace Samples.WebRequest
                 // send http requests using WebClient
                 Console.WriteLine();
                 Console.WriteLine("Sending request with WebClient.");
-                await RequestHelpers.SendWebClientRequests(_tracingDisabled, url, RequestContent);
-                await RequestHelpers.SendWebRequestRequests(_tracingDisabled, url, RequestContent);
+                await RequestHelpers.SendWebClientRequests(tracer, _tracingDisabled, url, RequestContent);
+                await RequestHelpers.SendWebRequestRequests(tracer, _tracingDisabled, url, RequestContent);
 
                 Console.WriteLine();
                 Console.WriteLine("Stopping HTTP listener.");

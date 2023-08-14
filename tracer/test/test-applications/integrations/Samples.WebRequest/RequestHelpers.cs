@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Datadog.Trace;
 
 namespace Samples.WebRequest
 {
@@ -14,7 +15,7 @@ namespace Samples.WebRequest
         private static readonly AutoResetEvent _allDone = new(false);
         private const string TracingEnabled = "x-datadog-tracing-enabled";
 
-        public static async Task SendWebClientRequests(bool tracingDisabled, string url, string requestContent)
+        public static async Task SendWebClientRequests(ITracer tracer, bool tracingDisabled, string url, string requestContent)
         {
             Console.WriteLine($"[WebClient] sending requests to {url}");
 
@@ -27,9 +28,9 @@ namespace Samples.WebRequest
                     webClient.Headers.Add(TracingEnabled, "false");
                 }
 
-                using (SampleHelpers.CreateScope("WebClient"))
+                using (tracer.StartActive("WebClient"))
                 {
-                    using (SampleHelpers.CreateScope("DownloadData"))
+                    using (tracer.StartActive("DownloadData"))
                     {
                         webClient.DownloadData(GetUrlForTest("DownloadData", url));
                         Console.WriteLine("Received response for client.DownloadData(String)");
@@ -38,7 +39,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadData(Uri)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadDataAsync"))
+                    using (tracer.StartActive("DownloadDataAsync"))
                     {
                         webClient.DownloadDataAsyncAndWait(new Uri(GetUrlForTest("DownloadDataAsync", url)));
                         Console.WriteLine("Received response for client.DownloadDataAsync(Uri)");
@@ -47,7 +48,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadDataAsync(Uri, Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadDataTaskAsync"))
+                    using (tracer.StartActive("DownloadDataTaskAsync"))
                     {
                         await webClient.DownloadDataTaskAsync(GetUrlForTest("DownloadDataTaskAsync", url));
                         Console.WriteLine("Received response for client.DownloadDataTaskAsync(String)");
@@ -56,7 +57,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadDataTaskAsync(Uri)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadFile"))
+                    using (tracer.StartActive("DownloadFile"))
                     {
                         webClient.DownloadFile(GetUrlForTest("DownloadFile", url), "DownloadFile.string.txt");
                         Console.WriteLine("Received response for client.DownloadFile(String, String)");
@@ -65,7 +66,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadFile(Uri, String)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadFileAsync"))
+                    using (tracer.StartActive("DownloadFileAsync"))
                     {
                         webClient.DownloadFileAsyncAndWait(new Uri(GetUrlForTest("DownloadFileAsync", url)), "DownloadFileAsync.uri.txt");
                         Console.WriteLine("Received response for client.DownloadFileAsync(Uri, String)");
@@ -74,7 +75,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadFileAsync(Uri, String, Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadFileTaskAsync"))
+                    using (tracer.StartActive("DownloadFileTaskAsync"))
                     {
                         await webClient.DownloadFileTaskAsync(GetUrlForTest("DownloadFileTaskAsync", url), "DownloadFileTaskAsync.string.txt");
                         Console.WriteLine("Received response for client.DownloadFileTaskAsync(String, String)");
@@ -83,7 +84,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadFileTaskAsync(Uri, String)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadString"))
+                    using (tracer.StartActive("DownloadString"))
                     {
                         webClient.DownloadString(GetUrlForTest("DownloadString", url));
                         Console.WriteLine("Received response for client.DownloadString(String)");
@@ -92,7 +93,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadString(Uri)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadStringAsync"))
+                    using (tracer.StartActive("DownloadStringAsync"))
                     {
                         webClient.DownloadStringAsyncAndWait(new Uri(GetUrlForTest("DownloadStringAsync", url)));
                         Console.WriteLine("Received response for client.DownloadStringAsync(Uri)");
@@ -101,7 +102,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadStringAsync(Uri, Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("DownloadStringTaskAsync"))
+                    using (tracer.StartActive("DownloadStringTaskAsync"))
                     {
                         await webClient.DownloadStringTaskAsync(GetUrlForTest("DownloadStringTaskAsync", url));
                         Console.WriteLine("Received response for client.DownloadStringTaskAsync(String)");
@@ -110,7 +111,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.DownloadStringTaskAsync(Uri)");
                     }
 
-                    using (SampleHelpers.CreateScope("OpenRead"))
+                    using (tracer.StartActive("OpenRead"))
                     {
                         webClient.OpenRead(GetUrlForTest("OpenRead", url)).Close();
                         Console.WriteLine("Received response for client.OpenRead(String)");
@@ -119,7 +120,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.OpenRead(Uri)");
                     }
 
-                    using (SampleHelpers.CreateScope("OpenReadAsync"))
+                    using (tracer.StartActive("OpenReadAsync"))
                     {
                         webClient.OpenReadAsyncAndWait(new Uri(GetUrlForTest("OpenReadAsync", url)));
                         Console.WriteLine("Received response for client.OpenReadAsync(Uri)");
@@ -128,7 +129,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.OpenReadAsync(Uri, Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("OpenReadTaskAsync"))
+                    using (tracer.StartActive("OpenReadTaskAsync"))
                     {
                         using Stream readStream1 = await webClient.OpenReadTaskAsync(GetUrlForTest("OpenReadTaskAsync", url));
                         Console.WriteLine("Received response for client.OpenReadTaskAsync(String)");
@@ -137,7 +138,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.OpenReadTaskAsync(Uri)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadData"))
+                    using (tracer.StartActive("UploadData"))
                     {
                         webClient.UploadData(GetUrlForTest("UploadData", url), new byte[0]);
                         Console.WriteLine("Received response for client.UploadData(String, Byte[])");
@@ -152,7 +153,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadData(Uri, String, Byte[])");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadDataAsync"))
+                    using (tracer.StartActive("UploadDataAsync"))
                     {
                         webClient.UploadDataAsyncAndWait(new Uri(GetUrlForTest("UploadDataAsync", url)), new byte[0]);
                         Console.WriteLine("Received response for client.UploadDataAsync(Uri, Byte[])");
@@ -164,7 +165,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadDataAsync(Uri, String, Byte[], Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadDataTaskAsync"))
+                    using (tracer.StartActive("UploadDataTaskAsync"))
                     {
                         await webClient.UploadDataTaskAsync(GetUrlForTest("UploadDataTaskAsync", url), new byte[0]);
                         Console.WriteLine("Received response for client.UploadDataTaskAsync(String, Byte[])");
@@ -181,7 +182,7 @@ namespace Samples.WebRequest
 
                     File.WriteAllText("UploadFile.txt", requestContent);
 
-                    using (SampleHelpers.CreateScope("UploadFile"))
+                    using (tracer.StartActive("UploadFile"))
                     {
                         webClient.UploadFile(GetUrlForTest("UploadFile", url), "UploadFile.txt");
                         Console.WriteLine("Received response for client.UploadFile(String, String)");
@@ -196,7 +197,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadFile(Uri, String, String)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadFileAsync"))
+                    using (tracer.StartActive("UploadFileAsync"))
                     {
                         webClient.UploadFileAsyncAndWait(new Uri(GetUrlForTest("UploadFileAsync", url)), "UploadFile.txt");
                         Console.WriteLine("Received response for client.UploadFileAsync(Uri, String)");
@@ -208,7 +209,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadFileAsync(Uri, String, String, Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadFileTaskAsync"))
+                    using (tracer.StartActive("UploadFileTaskAsync"))
                     {
                         await webClient.UploadFileTaskAsync(GetUrlForTest("UploadFileTaskAsync", url), "UploadFile.txt");
                         Console.WriteLine("Received response for client.UploadFileTaskAsync(String, String)");
@@ -223,7 +224,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadFileTaskAsync(Uri, String, String)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadString"))
+                    using (tracer.StartActive("UploadString"))
                     {
                         webClient.UploadString(GetUrlForTest("UploadString", url), requestContent);
                         Console.WriteLine("Received response for client.UploadString(String, String)");
@@ -238,7 +239,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadString(Uri, String, String)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadStringAsync"))
+                    using (tracer.StartActive("UploadStringAsync"))
                     {
                         webClient.UploadStringAsyncAndWait(new Uri(GetUrlForTest("UploadStringAsync", url)), requestContent);
                         Console.WriteLine("Received response for client.UploadStringAsync(Uri, String)");
@@ -250,7 +251,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadStringAsync(Uri, String, String, Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadStringTaskAsync"))
+                    using (tracer.StartActive("UploadStringTaskAsync"))
                     {
                         await webClient.UploadStringTaskAsync(GetUrlForTest("UploadStringTaskAsync", url), requestContent);
                         Console.WriteLine("Received response for client.UploadStringTaskAsync(String, String)");
@@ -266,7 +267,7 @@ namespace Samples.WebRequest
                     }
 
                     var values = new NameValueCollection();
-                    using (SampleHelpers.CreateScope("UploadValues"))
+                    using (tracer.StartActive("UploadValues"))
                     {
                         webClient.UploadValues(GetUrlForTest("UploadValues", url), values);
                         Console.WriteLine("Received response for client.UploadValues(String, NameValueCollection)");
@@ -281,7 +282,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadValues(Uri, String, NameValueCollection)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadValuesAsync"))
+                    using (tracer.StartActive("UploadValuesAsync"))
                     {
                         webClient.UploadValuesAsyncAndWait(new Uri(GetUrlForTest("UploadValuesAsync", url)), values);
                         Console.WriteLine("Received response for client.UploadValuesAsync(Uri, NameValueCollection)");
@@ -293,7 +294,7 @@ namespace Samples.WebRequest
                         Console.WriteLine("Received response for client.UploadValuesAsync(Uri, String, NameValueCollection, Object)");
                     }
 
-                    using (SampleHelpers.CreateScope("UploadValuesTaskAsync"))
+                    using (tracer.StartActive("UploadValuesTaskAsync"))
                     {
                         await webClient.UploadValuesTaskAsync(GetUrlForTest("UploadValuesTaskAsync", url), values);
                         Console.WriteLine("Received response for client.UploadValuesTaskAsync(String, NameValueCollection)");
@@ -311,13 +312,13 @@ namespace Samples.WebRequest
             }
         }
 
-        public static async Task SendWebRequestRequests(bool tracingDisabled, string url, string requestContent)
+        public static async Task SendWebRequestRequests(ITracer tracer, bool tracingDisabled, string url, string requestContent)
         {
             Console.WriteLine($"[WebRequest] sending requests to {url}");
 
-            using (SampleHelpers.CreateScope("WebRequest"))
+            using (tracer.StartActive("WebRequest"))
             {
-                using (SampleHelpers.CreateScope("GetResponse"))
+                using (tracer.StartActive("GetResponse"))
                 {
                     // Create separate request objects since .NET Core asserts only one response per request
                     HttpWebRequest request = (HttpWebRequest)System.Net.WebRequest.Create(GetUrlForTest("GetResponse", url));
@@ -330,7 +331,7 @@ namespace Samples.WebRequest
                     Console.WriteLine("Received response for request.GetResponse()");
                 }
 
-                using (SampleHelpers.CreateScope("GetResponseAsync"))
+                using (tracer.StartActive("GetResponseAsync"))
                 {
                     // Create separate request objects since .NET Core asserts only one response per request
                     HttpWebRequest request = (HttpWebRequest)System.Net.WebRequest.Create(GetUrlForTest("GetResponseAsync", url));
@@ -343,22 +344,22 @@ namespace Samples.WebRequest
                     Console.WriteLine("Received response for request.GetResponseAsync()");
                 }
 
-                using (SampleHelpers.CreateScope("GetRequestStream"))
+                using (tracer.StartActive("GetRequestStream"))
                 {
                     GetRequestStream(tracingDisabled, url);
                 }
 
-                using (SampleHelpers.CreateScope("BeginGetRequestStream"))
+                using (tracer.StartActive("BeginGetRequestStream"))
                 {
                     BeginGetRequestStream(tracingDisabled, url);
                 }
 
-                using (SampleHelpers.CreateScope("BeginGetResponse"))
+                using (tracer.StartActive("BeginGetResponse"))
                 {
                     BeginGetResponse(tracingDisabled, url);
                 }
 
-                using (SampleHelpers.CreateScope("BeginGetResponse TaskFactoryFromAsync"))
+                using (tracer.StartActive("BeginGetResponse TaskFactoryFromAsync"))
                 {
                     // Create separate request objects since .NET Core asserts only one response per request
                     HttpWebRequest request = (HttpWebRequest)System.Net.WebRequest.Create(GetUrlForTest("TaskFactoryFromAsync", url));
