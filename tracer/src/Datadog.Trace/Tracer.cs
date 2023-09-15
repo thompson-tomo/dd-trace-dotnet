@@ -226,14 +226,14 @@ namespace Datadog.Trace
         public string DefaultServiceName => TracerManager.DefaultServiceName;
 
         /// <summary>
-        /// Gets the name of the service.
+        /// Gets the environment of the service.
         /// </summary>
-        public string EnvironmentInternal => Settings.EnvironmentInternal;
+        internal string EnvironmentInternal => Settings.EnvironmentInternal;
 
         /// <summary>
         /// Gets the version of the service.
         /// </summary>
-        public string ServiceVersionInternal => Settings.ServiceVersionInternal;
+        internal string ServiceVersionInternal => Settings.ServiceVersionInternal;
 
         /// <summary>
         /// Gets the git metadata provider.
@@ -273,6 +273,16 @@ namespace Datadog.Trace
                 return TracerManager.PerTraceSettings;
             }
         }
+
+        /// <summary>
+        /// Gets the environment of the service. Note: This will only be called when there is no assembly version conflict.
+        /// </summary>
+        string IInternalTracer.EnvironmentInternal => EnvironmentInternal;
+
+        /// <summary>
+        /// Gets the version of the service. Note: This will only be called when there is no assembly version conflict.
+        /// </summary>
+        string IInternalTracer.ServiceVersionInternal => ServiceVersionInternal;
 
         // We should make this strongly typed before release, but for POC let's make this of type object
 #pragma warning disable SA1600 // Elements should be documented
@@ -644,5 +654,58 @@ namespace Datadog.Trace
 
         private SpanContext CreateLocalSpanContext(ISpanContext context)
             => new((TraceId)context.TraceId, context.SpanId, context.SamplingPriority, context.ServiceName, origin: null);
+
+        /// <summary>
+        /// This creates a new span with the given parameters and makes it active.
+        /// Note: This will only be called when there is no assembly version conflict.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <returns>A scope wrapping the newly created span</returns>
+        [PublicApi]
+        IScope IInternalTracer.StartActive(string operationName)
+        {
+            TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_StartActive);
+            TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.Manual);
+            return StartActiveInternal(operationName);
+        }
+
+        /// <summary>
+        /// This creates a new span with the given parameters and makes it active.
+        /// Note: This will only be called when there is no assembly version conflict.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <param name="parent">The span's parent</param>
+        /// <param name="serviceName">The span's service name</param>
+        /// <param name="startTime">An explicit start time for that span</param>
+        /// <param name="finishOnClose">Whether to close the span when the returned scope is closed</param>
+        /// <returns>A scope wrapping the newly created span</returns>
+        [PublicApi]
+        IScope IInternalTracer.StartActiveManual(string operationName, object parent, string serviceName, DateTimeOffset? startTime, bool? finishOnClose) => StartActiveManual(operationName, parent, serviceName, startTime, finishOnClose);
+
+        /// <summary>
+        /// This creates a new span with the given parameters.
+        /// Note: This will only be called when there is no assembly version conflict.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <param name="parent">The span's parent</param>
+        /// <param name="serviceName">The span's service name</param>
+        /// <param name="startTime">The span's start time</param>
+        /// <param name="ignoreActiveScope">If set the span will not be a child of the currently active span</param>
+        /// <returns>The newly created span</returns>
+        [PublicApi]
+        ISpan IInternalTracer.StartSpanManual(string operationName, object parent, string serviceName, DateTimeOffset? startTime, bool ignoreActiveScope) => StartSpanManual(operationName, parent, serviceName, startTime, ignoreActiveScope);
+
+        /// <summary>
+        /// Forces the tracer to immediately flush pending traces and send them to the agent.
+        /// To be called when the appdomain or the process is about to be killed in a non-graceful way.
+        /// Note: This will only be called when there is no assembly version conflict.
+        /// </summary>
+        /// <returns>Task used to track the async flush operation</returns>
+        [PublicApi]
+        Task IInternalTracer.ForceFlushAsync()
+        {
+            TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_ForceFlushAsync);
+            return FlushAsync();
+        }
     }
 }
