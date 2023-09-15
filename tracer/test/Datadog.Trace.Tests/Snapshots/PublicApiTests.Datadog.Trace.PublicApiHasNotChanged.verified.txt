@@ -390,6 +390,7 @@ namespace Datadog.Trace
     }
     public interface ISpanContext
     {
+        int? SamplingPriority { get; }
         string ServiceName { get; }
         ulong SpanId { get; }
         ulong TraceId { get; }
@@ -398,10 +399,16 @@ namespace Datadog.Trace
     {
         Datadog.Trace.ISpanContext? Extract<TCarrier>(TCarrier carrier, System.Func<TCarrier, string, System.Collections.Generic.IEnumerable<string?>> getter);
     }
+    public interface ISpanContextInjector
+    {
+        void Inject<TCarrier>(TCarrier carrier, System.Action<TCarrier, string, string> setter, Datadog.Trace.ISpanContext context);
+    }
     public interface ITracer
     {
         Datadog.Trace.IScope ActiveScope { get; }
+        System.Threading.Tasks.Task ForceFlushAsync();
         Datadog.Trace.IScope StartActive(string operationName);
+        Datadog.Trace.IScope StartActive(string operationName, Datadog.Trace.SpanCreationSettings settings);
     }
     public enum SamplingPriority
     {
@@ -416,19 +423,20 @@ namespace Datadog.Trace
         public SpanContext(ulong? traceId, ulong spanId, Datadog.Trace.SamplingPriority? samplingPriority = default, string serviceName = null) { }
         public Datadog.Trace.ISpanContext Parent { get; }
         public ulong? ParentId { get; }
+        public int? SamplingPriority { get; }
         public string ServiceName { get; set; }
         public ulong SpanId { get; }
         public ulong TraceId { get; }
     }
     public class SpanContextExtractor : Datadog.Trace.ISpanContextExtractor
     {
-        public SpanContextExtractor() { }
         public Datadog.Trace.ISpanContext? Extract<TCarrier>(TCarrier carrier, System.Func<TCarrier, string, System.Collections.Generic.IEnumerable<string?>> getter) { }
+        public static Datadog.Trace.ISpanContextExtractor Create() { }
     }
-    public class SpanContextInjector
+    public class SpanContextInjector : Datadog.Trace.ISpanContextInjector
     {
-        public SpanContextInjector() { }
         public void Inject<TCarrier>(TCarrier carrier, System.Action<TCarrier, string, string> setter, Datadog.Trace.ISpanContext context) { }
+        public static Datadog.Trace.ISpanContextInjector Create() { }
     }
     public struct SpanCreationSettings
     {
@@ -499,25 +507,24 @@ namespace Datadog.Trace
         public Tracer(Datadog.Trace.Configuration.TracerSettings settings) { }
         public Datadog.Trace.IScope ActiveScope { get; }
         public string DefaultServiceName { get; }
+        public string EnvironmentInternal { get; }
+        public string ServiceVersionInternal { get; }
         public Datadog.Trace.Configuration.ImmutableTracerSettings Settings { get; }
-        [set: System.Obsolete("Use Tracer.Configure to configure the global Tracer instance in code.")]
-        public static Datadog.Trace.Tracer Instance { get; set; }
+        public static Datadog.Trace.ITracer Instance { get; }
         protected override void Finalize() { }
         public System.Threading.Tasks.Task ForceFlushAsync() { }
         public Datadog.Trace.IScope StartActive(string operationName) { }
         public Datadog.Trace.IScope StartActive(string operationName, Datadog.Trace.SpanCreationSettings settings) { }
+        public Datadog.Trace.IScope StartActiveManual(string operationName, object parent, string serviceName, System.DateTimeOffset? startTime, bool? finishOnClose) { }
+        public Datadog.Trace.ISpan StartSpanManual(string operationName, object parent, string serviceName, System.DateTimeOffset? startTime, bool ignoreActiveScope) { }
         public static void Configure(Datadog.Trace.Configuration.TracerSettings settings) { }
         public static void ConfigureFromManual(object settings) { }
         public static object GetTracerInternal() { }
     }
-    public class TracerProvider
-    {
-        public Datadog.Trace.ITracer GetTracer() { }
-    }
     public class TracerProviderBuilder
     {
         public Datadog.Trace.TracerProviderBuilder AddSetting(string key, string? value) { }
-        public Datadog.Trace.TracerProvider Build() { }
+        public void Build() { }
         public static Datadog.Trace.TracerProviderBuilder Create() { }
     }
     public struct UserDetails

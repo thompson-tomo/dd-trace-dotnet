@@ -32,8 +32,8 @@ namespace Samples.WebRequest
             string port = args.FirstOrDefault(arg => arg.StartsWith("Port="))?.Split('=')[1] ?? "9000";
             Console.WriteLine($"Port {port}");
 
-            var tracerProvider = TracerProviderBuilder.Create().Build();
-            var tracer = tracerProvider.GetTracer();
+            TracerProviderBuilder.Create().Build();
+            var tracer = Tracer.Instance;
 
             using (var server = WebServer.Start(port, out string url))
             {
@@ -52,7 +52,8 @@ namespace Samples.WebRequest
                 Console.WriteLine("Stopping HTTP listener.");
             }
 
-            await SampleHelpers.ForceTracerFlushAsync();
+            // This reflection hack to flush the tracer doesn't work 
+            await tracer.ForceFlushAsync();
         }
 
         private static void HandleHttpRequests(HttpListenerContext context)

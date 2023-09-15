@@ -6,6 +6,7 @@
 #nullable enable
 
 using System;
+using System.Threading.Tasks;
 
 namespace Datadog.Trace
 {
@@ -51,5 +52,23 @@ namespace Datadog.Trace
         /// <param name="finishOnClose">Whether to close the span when the returned scope is closed</param>
         /// <returns>A scope wrapping the newly created span</returns>
         IScope StartActiveManual(string operationName, object? parent, string? serviceName, DateTimeOffset? startTime, bool? finishOnClose);
+
+        /// <summary>
+        /// This creates a new span with the given parameters.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <param name="parent">The span's parent</param>
+        /// <param name="serviceName">The span's service name</param>
+        /// <param name="startTime">The span's start time</param>
+        /// <param name="ignoreActiveScope">If set the span will not be a child of the currently active span</param>
+        /// <returns>The newly created span</returns>
+        ISpan StartSpanManual(string? operationName, object? parent, string? serviceName, DateTimeOffset? startTime, bool ignoreActiveScope);
+
+        /// <summary>
+        /// Forces the tracer to immediately flush pending traces and send them to the agent.
+        /// To be called when the appdomain or the process is about to be killed in a non-graceful way.
+        /// </summary>
+        /// <returns>Task used to track the async flush operation</returns>
+        public Task ForceFlushAsync();
     }
 }

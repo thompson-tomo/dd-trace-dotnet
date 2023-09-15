@@ -138,7 +138,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
             where TBasicProperties : IBasicProperties
             where TBody : IBody // ReadOnlyMemory<byte> body in 6.0.0
         {
-            if (IsActiveScopeRabbitMQ(Tracer.Instance))
+            if (IsActiveScopeRabbitMQ(Tracer.InternalInstance))
             {
                 // we are already instrumenting this,
                 // don't instrument nested methods that belong to the same stacktrace
@@ -168,13 +168,13 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.RabbitMQ
                 }
             }
 
-            var scope = RabbitMQIntegration.CreateScope(Tracer.Instance, out RabbitMQTags tags, "basic.deliver", parentContext: propagatedContext, spanKind: SpanKinds.Consumer, queue: queue, exchange: exchange, routingKey: routingKey);
+            var scope = RabbitMQIntegration.CreateScope(Tracer.InternalInstance, out RabbitMQTags tags, "basic.deliver", parentContext: propagatedContext, spanKind: SpanKinds.Consumer, queue: queue, exchange: exchange, routingKey: routingKey);
             if (tags != null)
             {
                 tags.MessageSize = body?.Length.ToString() ?? "0";
             }
 
-            RabbitMQIntegration.SetDataStreamsCheckpointOnConsume(Tracer.Instance, scope.Span, tags, basicProperties?.Headers);
+            RabbitMQIntegration.SetDataStreamsCheckpointOnConsume(Tracer.InternalInstance, scope.Span, tags, basicProperties?.Headers);
             return new CallTargetState(scope);
         }
 

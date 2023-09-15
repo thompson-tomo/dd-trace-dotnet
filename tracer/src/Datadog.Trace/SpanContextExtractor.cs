@@ -60,7 +60,7 @@ namespace Datadog.Trace
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "DD0002:Incorrect usage of public API", Justification = "This is fine for POC")]
         internal static object CreateSpanContextExtractorInternal()
         {
-            var tracerType = TracerProvider.GetTracerInternal().GetType();
+            var tracerType = Tracer.GetTracerInternal().GetType();
             var spanContextExtractorType = tracerType.Assembly.GetType(typeof(SpanContextExtractor).FullName!, throwOnError: false);
             if (spanContextExtractorType is not null && Activator.CreateInstance(spanContextExtractorType, nonPublic: true) is object retVal)
             {
@@ -79,7 +79,7 @@ namespace Datadog.Trace
             TelemetryFactory.Metrics.Record(PublicApiUsage.SpanContextExtractor_Extract);
             var spanContext = SpanContextPropagator.Instance.Extract(carrier, getter);
             if (spanContext is not null
-             && Tracer.Instance.TracerManager.DataStreamsManager is { IsEnabled: true } dsm
+             && Tracer.InternalInstance.TracerManager.DataStreamsManager is { IsEnabled: true } dsm
              && getter(carrier, DataStreamsPropagationHeaders.TemporaryEdgeTags).FirstOrDefault() is { Length: > 0 } edgeTagString)
             {
                 var base64PathwayContext = getter(carrier, DataStreamsPropagationHeaders.TemporaryBase64PathwayContext).FirstOrDefault();

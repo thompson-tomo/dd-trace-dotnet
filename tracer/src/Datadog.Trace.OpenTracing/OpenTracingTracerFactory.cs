@@ -45,7 +45,7 @@ namespace Datadog.Trace.OpenTracing
             }
 
             Tracer.ConfigureInternal(new ImmutableTracerSettings(configuration, true));
-            var tracer = Tracer.Instance;
+            var tracer = Tracer.GetTracerInstance();
             return new OpenTracingTracer(tracer, OpenTracingTracer.CreateDefaultScopeManager(), tracer.DefaultServiceName);
         }
 

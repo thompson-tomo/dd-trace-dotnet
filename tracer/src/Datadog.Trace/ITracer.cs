@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2017 Datadog, Inc.
 // </copyright>
 
-using Datadog.Trace.Configuration;
+using System.Threading.Tasks;
 using Datadog.Trace.SourceGenerators;
 
 namespace Datadog.Trace
@@ -34,5 +34,13 @@ namespace Datadog.Trace
         /// <returns>A scope wrapping the newly created span</returns>
         [PublicApi]
         IScope StartActive(string operationName, Datadog.Trace.SpanCreationSettings settings);
+
+        /// <summary>
+        /// Forces the tracer to immediately flush pending traces and send them to the agent.
+        /// To be called when the appdomain or the process is about to be killed in a non-graceful way.
+        /// </summary>
+        /// <returns>Task used to track the async flush operation</returns>
+        [PublicApi]
+        public Task ForceFlushAsync();
     }
 }

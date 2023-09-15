@@ -30,23 +30,11 @@ public class TracerProviderBuilder
         return this;
     }
 
-    public TracerProvider Build()
+    public void Build()
     {
         if (_settings.Count > 0)
         {
-            ConfigureFromManual(_settings);
+            Tracer.Configure(_settings);
         }
-
-        return new();
-    }
-
-    // Important: This method will be modified by automatic instrumentation.
-    // Instead of calling this assembly's Tracer.ConfigureFromManual(settings),
-    // it will call the other Tracer type
-    internal static void ConfigureFromManual(object settings)
-    {
-#pragma warning disable DD0002 // Incorrect usage of public API
-        Tracer.ConfigureFromManual(settings);
-#pragma warning restore DD0002 // Incorrect usage of public API
     }
 }

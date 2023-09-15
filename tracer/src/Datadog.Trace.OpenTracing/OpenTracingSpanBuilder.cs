@@ -78,7 +78,7 @@ namespace Datadog.Trace.OpenTracing
             {
                 ISpanContext parentContext = GetParentContext();
                 TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.OpenTracing);
-                ISpan ddSpan = _tracer.DatadogTracer.StartSpan(_operationName, parentContext, _serviceName, _start, _ignoreActiveSpan);
+                ISpan ddSpan = _tracer.DatadogTracer.StartSpanManual(_operationName, parentContext, _serviceName, _start, _ignoreActiveSpan);
                 var otSpan = new OpenTracingSpan(ddSpan);
 
                 if (_tags != null)

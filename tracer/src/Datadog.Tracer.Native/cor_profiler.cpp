@@ -2521,30 +2521,6 @@ HRESULT CorProfiler::RewriteForDistributedConfiguration(const ModuleMetadata& mo
     LogManagedProfilerAssemblyDetails();
 
     //
-    // *** Get (Manual) TracerProviderBuilder TypeDef
-    //
-    mdTypeDef tracerProviderBuilderTypeDef;
-    hr = module_metadata.metadata_import->FindTypeDefByName(distributed_configuration_source_type_name.c_str(),
-                                                            mdTokenNil, &tracerProviderBuilderTypeDef);
-    if (FAILED(hr))
-    {
-        Logger::Warn("Error rewriting for Distributed Configuration on getting TracerProviderBuilder TypeDef");
-        return hr;
-    }
-
-    //
-    // *** Get (Manual) TracerProvider TypeDef
-    //
-    mdTypeDef tracerProviderTypeDef;
-    hr = module_metadata.metadata_import->FindTypeDefByName(distributed_configuration_tracer_provider_source_type_name.c_str(),
-                                                            mdTokenNil, &tracerProviderTypeDef);
-    if (FAILED(hr))
-    {
-        Logger::Warn("Error rewriting for Distributed Configuration on getting TracerProvider TypeDef");
-        return hr;
-    }
-
-    //
     // *** Get (Manual) Tracer TypeDef
     //
     mdTypeDef manualTracerTypeDef;
@@ -2583,11 +2559,11 @@ HRESULT CorProfiler::RewriteForDistributedConfiguration(const ModuleMetadata& mo
     }
 
     //
-    // *** Source (TracerProviderBuilder.ConfigureFromManual) MethodDef ***
+    // *** Source (Tracer.ConfigureFromManual) MethodDef ***
     //
     constexpr COR_SIGNATURE configureFromManualSignature[] = {IMAGE_CEE_CS_CALLCONV_DEFAULT, 0x01, ELEMENT_TYPE_VOID, ELEMENT_TYPE_OBJECT};
     mdMethodDef configureFromManualMethodDef;
-    hr = module_metadata.metadata_import->FindMethod(tracerProviderBuilderTypeDef, WStr("ConfigureFromManual"),
+    hr = module_metadata.metadata_import->FindMethod(manualTracerTypeDef, WStr("ConfigureFromManual"),
                                                      configureFromManualSignature, 4, &configureFromManualMethodDef);
     if (FAILED(hr))
     {
@@ -2596,7 +2572,7 @@ HRESULT CorProfiler::RewriteForDistributedConfiguration(const ModuleMetadata& mo
     }
 
     //
-    // *** Source (TracerProvider.GetTracerInternal) MethodDef ***
+    // *** Source (Tracer.GetTracerInternal) MethodDef ***
     //
     constexpr COR_SIGNATURE getTracerSignature[] = {
         IMAGE_CEE_CS_CALLCONV_DEFAULT, // Calling convention
@@ -2605,7 +2581,7 @@ HRESULT CorProfiler::RewriteForDistributedConfiguration(const ModuleMetadata& mo
     };
 
     mdMethodDef getTracerManualMethodDef;
-    hr = module_metadata.metadata_import->FindMethod(tracerProviderTypeDef, WStr("GetTracerInternal"),
+    hr = module_metadata.metadata_import->FindMethod(manualTracerTypeDef, WStr("GetTracerInternal"),
                                                      getTracerSignature, 3, &getTracerManualMethodDef);
     if (FAILED(hr))
     {

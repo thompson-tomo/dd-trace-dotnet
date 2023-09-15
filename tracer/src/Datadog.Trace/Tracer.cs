@@ -52,7 +52,7 @@ namespace Datadog.Trace
         {
             TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_Ctor);
             // Don't call Configure because it will call Start on the TracerManager
-            // before this new instance of Tracer is assigned to Tracer.Instance
+            // before this new instance of Tracer is assigned to Tracer.InternalInstance
             TracerManager.ReplaceGlobalManager(null, TracerManagerFactory.Instance);
 
             // update the count of Tracer instances
@@ -76,7 +76,7 @@ namespace Datadog.Trace
         {
             TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_Ctor_Settings);
             // Don't call Configure because it will call Start on the TracerManager
-            // before this new instance of Tracer is assigned to Tracer.Instance
+            // before this new instance of Tracer is assigned to Tracer.InternalInstance
             TracerManager.ReplaceGlobalManager(settings is null ? null : new ImmutableTracerSettings(settings, true), TracerManagerFactory.Instance);
 
             // update the count of Tracer instances
@@ -124,11 +124,26 @@ namespace Datadog.Trace
         }
 
         /// <summary>
-        /// Gets or sets the global <see cref="Tracer"/> instance.
+        /// Gets the global <see cref="Tracer"/> instance.
         /// Used by all automatic instrumentation and recommended
         /// as the entry point for manual instrumentation.
         /// </summary>
-        public static Tracer Instance
+        [PublicApi]
+        public static ITracer Instance
+        {
+            get
+            {
+                return (ITracer)GetTracerInstance();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the global <see cref="Tracer"/> instance.
+        /// Used by all automatic instrumentation, but is not suitable for use by manual instrumentation.
+        /// Manual instrumentation should instead access <see cref="Tracer.Instance"/> to receive a tracer
+        /// object that is not afflicted by the "version conflict" scenario.
+        /// </summary>
+        internal static Tracer InternalInstance
         {
             get
             {
@@ -154,10 +169,6 @@ namespace Datadog.Trace
                 return instance;
             }
 
-            // TODO: Make this API internal
-            [Obsolete("Use " + nameof(Tracer) + "." + nameof(Configure) + " to configure the global Tracer" +
-                      " instance in code.")]
-            [PublicApi]
             set
             {
                 TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_Instance_Set);
@@ -281,7 +292,7 @@ namespace Datadog.Trace
         // We should make this strongly typed before release, but for POC let's make this of type object
 #pragma warning disable SA1600 // Elements should be documented
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-        public static object GetTracerInternal() => Tracer.Instance;
+        public static object GetTracerInternal() => InternalInstance;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning restore SA1600 // Elements should be documented
 
@@ -298,10 +309,15 @@ namespace Datadog.Trace
             ConfigureInternal(settings is null ? null : new ImmutableTracerSettings(settings, true));
         }
 
+        internal static void Configure(Dictionary<string, string> settings)
+        {
+            ConfigureFromManual(settings);
+        }
+
         internal static void ConfigureInternal(ImmutableTracerSettings settings)
         {
             TracerManager.ReplaceGlobalManager(settings, TracerManagerFactory.Instance);
-            Tracer.Instance.TracerManager.Start();
+            Tracer.InternalInstance.TracerManager.Start();
         }
 
         /// <summary>
@@ -397,6 +413,34 @@ namespace Datadog.Trace
         }
 
         /// <summary>
+        /// This creates a new span with the given parameters.
+        /// </summary>
+        /// <param name="operationName">The span's operation name</param>
+        /// <param name="parent">The span's parent</param>
+        /// <param name="serviceName">The span's service name</param>
+        /// <param name="startTime">The span's start time</param>
+        /// <param name="ignoreActiveScope">If set the span will not be a child of the currently active span</param>
+        /// <returns>The newly created span</returns>
+        public ISpan StartSpanManual(string operationName, object parent, string serviceName, DateTimeOffset? startTime, bool ignoreActiveScope)
+        {
+            // TelemetryFactory.Metrics.Record(PublicApiUsage.Tracer_StartActive_Settings);
+            TelemetryFactory.Metrics.RecordCountSpanCreated(MetricTags.IntegrationName.Manual);
+
+            ISpanContext spanContext = null;
+            if (parent is SpanContext automaticSpanContext)
+            {
+                spanContext = automaticSpanContext;
+            }
+            else if (parent is not null
+                && parent.TryDuckCast<ISpanContext>(out var manualSpanContext))
+            {
+                spanContext = CreateLocalSpanContext(manualSpanContext);
+            }
+
+            return ((IDatadogOpenTracingTracer)this).StartSpan(operationName, spanContext, serviceName, startTime, ignoreActiveScope);
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ISpan"/> with the specified parameters.
         /// </summary>
         /// <param name="operationName">The span's operation name</param>
@@ -447,6 +491,23 @@ namespace Datadog.Trace
             if (Settings.TraceEnabledInternal || Settings.AzureAppServiceMetadata?.CustomTracingEnabled is true)
             {
                 TracerManager.WriteTrace(trace);
+            }
+        }
+
+        internal static IInternalTracer GetTracerInstance()
+        {
+            var tracer = GetTracerInternal();
+            if (tracer is Tracer manualTracer)
+            {
+                return manualTracer;
+            }
+            else if (tracer.TryDuckCast<IInternalTracer>(out var automaticTracer))
+            {
+                return new TracerWrapper(automaticTracer);
+            }
+            else
+            {
+                throw new Exception();
             }
         }
 
@@ -525,7 +586,7 @@ namespace Datadog.Trace
 
         /// <remarks>
         /// When calling this method from an integration, ensure you call
-        /// <c>Tracer.Instance.TracerManager.Telemetry.IntegrationGenerateSpan</c> so that the integration is recorded,
+        /// <c>Tracer.InternalInstance.TracerManager.Telemetry.IntegrationGenerateSpan</c> so that the integration is recorded,
         /// and the span count metric is incremented. Alternatively, if this is not being called from an
         /// automatic integration, call <c>TelemetryFactory.Metrics.RecordCountSpanCreated()</c> directory instead.
         /// </remarks>
@@ -538,7 +599,7 @@ namespace Datadog.Trace
 
         /// <remarks>
         /// When calling this method from an integration, and _not_ discarding the span, ensure you call
-        /// <c>Tracer.Instance.TracerManager.Telemetry.IntegrationGenerateSpan</c> so that the integration is recorded,
+        /// <c>Tracer.InternalInstance.TracerManager.Telemetry.IntegrationGenerateSpan</c> so that the integration is recorded,
         /// and the span count metric is incremented. Alternatively, if this is not being called from an
         /// automatic integration, call <c>TelemetryFactory.Metrics.RecordCountSpanCreated()</c> directly instead.
         /// </remarks>

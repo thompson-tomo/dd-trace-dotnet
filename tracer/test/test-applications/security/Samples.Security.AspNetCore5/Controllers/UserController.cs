@@ -11,12 +11,10 @@ namespace Samples.Security.AspNetCore5.Controllers
     public class UserController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ITracer _tracer;
 
         public UserController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            _tracer = TracerProviderBuilder.Create().Build().GetTracer();
         }
 
         public IActionResult Index(string userId = null)
@@ -25,7 +23,7 @@ namespace Samples.Security.AspNetCore5.Controllers
             {
                 Id = userId ?? "user3"
             };
-            _tracer.ActiveScope?.Span.SetUser(userDetails);
+            Tracer.Instance.ActiveScope?.Span.SetUser(userDetails);
 
             return View();
         }

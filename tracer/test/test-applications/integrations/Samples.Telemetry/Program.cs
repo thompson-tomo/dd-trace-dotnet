@@ -23,7 +23,7 @@ namespace Samples.Telemetry
                 .Create()
                 .AddSetting("DD_SERVICE", "Samples.Telemetry.Renamed")
                 .Build();
-            var tracer = tracerProvider.GetTracer();
+            var tracer = Tracer.Instance;
 
             Console.WriteLine(CorrelationIdentifier.Service);
             Console.WriteLine(CorrelationIdentifier.Env);

@@ -107,8 +107,6 @@ const shared::WSTRING calltargetbubbleexception_tracer_type_name = WStr("Datadog
 const shared::WSTRING distributed_tracer_interface_name = WStr("Datadog.Trace.ClrProfiler.IDistributedTracer");
 const shared::WSTRING distributed_tracer_target_method_name = WStr("__GetInstanceForProfiler__");
 
-const shared::WSTRING distributed_configuration_source_type_name = WStr("Datadog.Trace.TracerProviderBuilder");
-const shared::WSTRING distributed_configuration_tracer_provider_source_type_name = WStr("Datadog.Trace.TracerProvider");
 const shared::WSTRING distributed_configuration_target_type_name = WStr("Datadog.Trace.Tracer");
 const shared::WSTRING distributed_configuration_target_method_name = WStr("ConfigureFromManual");
 const shared::WSTRING distributed_gettracer_target_method_name = WStr("GetTracerInternal");

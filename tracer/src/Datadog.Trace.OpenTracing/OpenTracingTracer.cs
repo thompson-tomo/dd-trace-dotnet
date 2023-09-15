@@ -21,21 +21,21 @@ namespace Datadog.Trace.OpenTracing
         private readonly Dictionary<string, ICodec> _codecs;
 
         [PublicApi]
-        public OpenTracingTracer(IDatadogOpenTracingTracer datadogTracer)
+        public OpenTracingTracer(IInternalTracer datadogTracer)
             : this(datadogTracer, CreateDefaultScopeManager(), datadogTracer.DefaultServiceName)
         {
             TelemetryFactory.Metrics.Record(PublicApiUsage.OpenTracingTracer_Ctor_DatadogTracer);
         }
 
         [PublicApi]
-        public OpenTracingTracer(IDatadogOpenTracingTracer datadogTracer, global::OpenTracing.IScopeManager scopeManager)
+        public OpenTracingTracer(IInternalTracer datadogTracer, global::OpenTracing.IScopeManager scopeManager)
             : this(datadogTracer, scopeManager, datadogTracer.DefaultServiceName)
         {
             TelemetryFactory.Metrics.Record(PublicApiUsage.OpenTracingTracer_Ctor_DatadogTracer_ScopeManager);
         }
 
         internal OpenTracingTracer(
-            IDatadogOpenTracingTracer datadogTracer,
+            IInternalTracer datadogTracer,
             global::OpenTracing.IScopeManager scopeManager,
             string defaultServiceName)
         {
@@ -49,7 +49,7 @@ namespace Datadog.Trace.OpenTracing
             };
         }
 
-        public IDatadogOpenTracingTracer DatadogTracer { get; }
+        public IInternalTracer DatadogTracer { get; }
 
         public string DefaultServiceName { get; }
 

@@ -34,8 +34,8 @@ namespace Datadog.Trace.Activity.Handlers
         public void ActivityStarted<T>(string sourceName, T activity)
             where T : IActivity
         {
-            Tracer.Instance.TracerManager.Telemetry.IntegrationRunning(IntegrationId);
-            var activeSpan = Tracer.Instance.ActiveScope?.Span as Span;
+            Tracer.InternalInstance.TracerManager.Telemetry.IntegrationRunning(IntegrationId);
+            var activeSpan = Tracer.InternalInstance.ActiveScope?.Span as Span;
 
             // Propagate Trace and Parent Span ids
             SpanContext? parent = null;
@@ -78,7 +78,7 @@ namespace Datadog.Trace.Activity.Handlers
                             _ = HexString.TryParseTraceId(activityTraceId, out var newActivityTraceId);
                             _ = HexString.TryParseUInt64(parentSpanId, out var newActivitySpanId);
 
-                            parent = Tracer.Instance.CreateSpanContext(
+                            parent = Tracer.InternalInstance.CreateSpanContext(
                                 SpanContext.None,
                                 traceId: newActivityTraceId,
                                 spanId: newActivitySpanId,
@@ -167,7 +167,7 @@ namespace Datadog.Trace.Activity.Handlers
 
             static Scope CreateScopeFromActivity(T activity, SpanContext? parent, TraceId traceId, ulong spanId, string? rawTraceId, string? rawSpanId)
             {
-                var span = Tracer.Instance.StartSpan(
+                var span = Tracer.InternalInstance.StartSpan(
                     activity.OperationName,
                     parent: parent,
                     startTime: activity.StartTimeUtc,
@@ -176,8 +176,8 @@ namespace Datadog.Trace.Activity.Handlers
                     rawTraceId: rawTraceId,
                     rawSpanId: rawSpanId);
 
-                Tracer.Instance.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
-                return Tracer.Instance.ActivateSpan(span, finishOnClose: false);
+                Tracer.InternalInstance.TracerManager.Telemetry.IntegrationGeneratedSpan(IntegrationId);
+                return Tracer.InternalInstance.ActivateSpan(span, finishOnClose: false);
             }
         }
 

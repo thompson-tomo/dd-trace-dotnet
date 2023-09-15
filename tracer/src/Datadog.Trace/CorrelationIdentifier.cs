@@ -35,7 +35,7 @@ namespace Datadog.Trace
             get
             {
                 TelemetryFactory.Metrics.Record(PublicApiUsage.Correlation_Identifier_Service_Get);
-                return TracerProvider.GetTracerInstance().DefaultServiceName ?? string.Empty;
+                return Tracer.GetTracerInstance().DefaultServiceName ?? string.Empty;
             }
         }
 
@@ -47,7 +47,7 @@ namespace Datadog.Trace
             get
             {
                 TelemetryFactory.Metrics.Record(PublicApiUsage.Correlation_Identifier_Version_Get);
-                return TracerProvider.GetTracerInstance().ServiceVersionInternal ?? string.Empty;
+                return Tracer.GetTracerInstance().ServiceVersionInternal ?? string.Empty;
             }
         }
 
@@ -59,7 +59,7 @@ namespace Datadog.Trace
             get
             {
                 TelemetryFactory.Metrics.Record(PublicApiUsage.Correlation_Identifier_Env_Get);
-                return TracerProvider.GetTracerInstance().EnvironmentInternal ?? string.Empty;
+                return Tracer.GetTracerInstance().EnvironmentInternal ?? string.Empty;
             }
         }
 
@@ -72,7 +72,7 @@ namespace Datadog.Trace
             get
             {
                 TelemetryFactory.Metrics.Record(PublicApiUsage.Correlation_Identifier_TraceId_Get);
-                return TracerProvider.GetTracerInstance().ActiveScope?.Span?.TraceId ?? 0;
+                return Tracer.GetTracerInstance().ActiveScope?.Span?.TraceId ?? 0;
             }
         }
 
@@ -85,7 +85,7 @@ namespace Datadog.Trace
             get
             {
                 TelemetryFactory.Metrics.Record(PublicApiUsage.Correlation_Identifier_SpanId_Get);
-                return TracerProvider.GetTracerInstance().ActiveScope?.Span?.SpanId ?? 0;
+                return Tracer.GetTracerInstance().ActiveScope?.Span?.SpanId ?? 0;
             }
         }
     }

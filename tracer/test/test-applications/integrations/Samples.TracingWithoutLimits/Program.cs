@@ -104,12 +104,10 @@ namespace Samples.TracingWithoutLimits
 
         private static void RunStuff(string serviceName, string operationName)
         {
-            var tracerProvider =
-                TracerProviderBuilder
+            TracerProviderBuilder
                 .Create()
                 .AddSetting("DD_SERVICE", serviceName)
                 .Build();
-            var tracer = tracerProvider.GetTracer();
 
             // var settings = TracerSettings.FromDefaultSources();
             // settings.ServiceName = serviceName;
@@ -119,20 +117,20 @@ namespace Samples.TracingWithoutLimits
 
             IScope root;
 
-            using (root = tracer.StartActive(operationName: operationName))
+            using (root = Tracer.Instance.StartActive(operationName: operationName))
             {
                 Thread.Sleep(3);
 
-                using (var sub = tracer.StartActive(operationName: SubOperation))
+                using (var sub = Tracer.Instance.StartActive(operationName: SubOperation))
                 {
                     Thread.Sleep(2);
 
-                    using (var open = tracer.StartActive(operationName: OpenOperation))
+                    using (var open = Tracer.Instance.StartActive(operationName: OpenOperation))
                     {
                         Thread.Sleep(2);
                     }
 
-                    using (var close = tracer.StartActive(operationName: CloseOperation))
+                    using (var close = Tracer.Instance.StartActive(operationName: CloseOperation))
                     {
                         Thread.Sleep(1);
                     }

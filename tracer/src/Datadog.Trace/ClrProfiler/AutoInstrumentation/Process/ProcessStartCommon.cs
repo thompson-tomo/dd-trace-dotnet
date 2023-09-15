@@ -33,7 +33,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Process
 
         internal static Scope CreateScope(string filename, IDictionary<string, string> environmentVariables)
         {
-            var tracer = Tracer.Instance;
+            var tracer = Tracer.InternalInstance;
             if (!tracer.Settings.IsIntegrationEnabled(IntegrationId))
             {
                 // integration disabled, don't create a scope, skip this span

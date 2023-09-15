@@ -58,7 +58,7 @@ namespace Datadog.Trace
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "DD0002:Incorrect usage of public API", Justification = "This is fine for POC")]
         internal static object CreateSpanContextInjectorInternal()
         {
-            var tracerType = TracerProvider.GetTracerInternal().GetType();
+            var tracerType = Tracer.GetTracerInternal().GetType();
             var spanContextInjectorType = tracerType.Assembly.GetType(typeof(SpanContextInjector).FullName!, throwOnError: false);
             if (spanContextInjectorType is not null && Activator.CreateInstance(spanContextInjectorType, nonPublic: true) is object retVal)
             {
