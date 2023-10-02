@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Datadog.Trace;
+using Datadog.Trace.Configuration;
 
 namespace Samples.WebRequest
 {
@@ -32,7 +33,9 @@ namespace Samples.WebRequest
             string port = args.FirstOrDefault(arg => arg.StartsWith("Port="))?.Split('=')[1] ?? "9000";
             Console.WriteLine($"Port {port}");
 
-            TracerProviderBuilder.Create().Build();
+            var settings = TracerSettings.FromDefaultSources();
+            settings.ServiceName = "some-service";
+            Tracer.Configure(new());
             var tracer = Tracer.Instance;
 
             using (var server = WebServer.Start(port, out string url))

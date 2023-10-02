@@ -104,14 +104,9 @@ namespace Samples.TracingWithoutLimits
 
         private static void RunStuff(string serviceName, string operationName)
         {
-            TracerProviderBuilder
-                .Create()
-                .AddSetting("DD_SERVICE", serviceName)
-                .Build();
-
-            // var settings = TracerSettings.FromDefaultSources();
-            // settings.ServiceName = serviceName;
-            // Tracer.Configure(settings);
+            var settings = TracerSettings.FromDefaultSources();
+            settings.ServiceName = serviceName;
+            Tracer.Configure(settings);
 
             Counts[Key(serviceName, operationName)]++;
 

@@ -519,12 +519,6 @@ namespace Datadog.Trace
         public static void ConfigureFromManual(object settings) { }
         public static object GetTracerInternal() { }
     }
-    public class TracerProviderBuilder
-    {
-        public Datadog.Trace.TracerProviderBuilder AddSetting(string key, string? value) { }
-        public void Build() { }
-        public static Datadog.Trace.TracerProviderBuilder Create() { }
-    }
     public struct UserDetails
     {
         public UserDetails(string id) { }
