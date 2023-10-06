@@ -18,7 +18,7 @@ namespace Datadog.Trace.Ci;
 /// <summary>
 /// CI Visibility test suite
 /// </summary>
-public sealed class TestSuite
+internal sealed class TestSuite : ITestSuite
 {
     private static readonly AsyncLocal<TestSuite?> CurrentSuite = new();
     private readonly Span _span;
@@ -71,6 +71,8 @@ public sealed class TestSuite
     /// Gets the test module for this suite
     /// </summary>
     public TestModule Module { get; }
+
+    ITestModule ITestSuite.Module => Module;
 
     /// <summary>
     /// Gets or sets the current TestSuite
@@ -188,7 +190,7 @@ public sealed class TestSuite
     /// <param name="name">Name of the test</param>
     /// <returns>Test instance</returns>
     [PublicApi]
-    public Test CreateTest(string name)
+    public ITest CreateTest(string name)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Test);
         return InternalCreateTest(name);
@@ -211,7 +213,7 @@ public sealed class TestSuite
     /// <param name="startDate">Test start date</param>
     /// <returns>Test instance</returns>
     [PublicApi]
-    public Test CreateTest(string name, DateTimeOffset startDate)
+    public ITest CreateTest(string name, DateTimeOffset startDate)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Test);
         return InternalCreateTest(name, startDate);

@@ -62,91 +62,91 @@ namespace Datadog.Trace.Ci
         GarbageCollectorGen2 = 7,
         MemoryTotalOperations = 8,
     }
-    public sealed class Test
+    public interface ITest
     {
-        public string? Name { get; }
-        public System.DateTimeOffset StartTime { get; }
-        public Datadog.Trace.Ci.TestSuite Suite { get; }
-        public void AddBenchmarkData(Datadog.Trace.Ci.BenchmarkMeasureType measureType, string info, in Datadog.Trace.Ci.BenchmarkDiscreteStats statistics) { }
-        public void Close(Datadog.Trace.Ci.TestStatus status) { }
-        public void Close(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration) { }
-        public void Close(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration, string? skipReason) { }
-        public void SetBenchmarkMetadata(in Datadog.Trace.Ci.BenchmarkHostInfo hostInfo, in Datadog.Trace.Ci.BenchmarkJobInfo jobInfo) { }
-        public void SetErrorInfo(System.Exception exception) { }
-        public void SetErrorInfo(string type, string message, string? callStack) { }
-        public void SetParameters(Datadog.Trace.Ci.TestParameters parameters) { }
-        public void SetTag(string key, double? value) { }
-        public void SetTag(string key, string? value) { }
-        public void SetTestMethodInfo(System.Reflection.MethodInfo methodInfo) { }
-        public void SetTraits(System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> traits) { }
+        string? Name { get; }
+        System.DateTimeOffset StartTime { get; }
+        Datadog.Trace.Ci.ITestSuite Suite { get; }
+        void AddBenchmarkData(Datadog.Trace.Ci.BenchmarkMeasureType measureType, string info, in Datadog.Trace.Ci.BenchmarkDiscreteStats statistics);
+        void Close(Datadog.Trace.Ci.TestStatus status);
+        void Close(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration);
+        void Close(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration, string? skipReason);
+        void SetBenchmarkMetadata(in Datadog.Trace.Ci.BenchmarkHostInfo hostInfo, in Datadog.Trace.Ci.BenchmarkJobInfo jobInfo);
+        void SetErrorInfo(System.Exception exception);
+        void SetErrorInfo(string type, string message, string? callStack);
+        void SetParameters(System.Collections.Generic.Dictionary<string, object>? arguments, System.Collections.Generic.Dictionary<string, object>? metadata);
+        void SetTag(string key, double? value);
+        void SetTag(string key, string? value);
+        void SetTestMethodInfo(System.Reflection.MethodInfo methodInfo);
+        void SetTraits(System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> traits);
     }
-    public sealed class TestModule
+    public interface ITestModule
     {
-        public string? Framework { get; }
-        public string Name { get; }
-        public System.DateTimeOffset StartTime { get; }
-        public void Close() { }
-        public void Close(System.TimeSpan? duration) { }
-        public System.Threading.Tasks.Task CloseAsync() { }
-        public System.Threading.Tasks.Task CloseAsync(System.TimeSpan? duration) { }
-        public Datadog.Trace.Ci.TestSuite GetOrCreateSuite(string name) { }
-        public Datadog.Trace.Ci.TestSuite GetOrCreateSuite(string name, System.DateTimeOffset? startDate) { }
-        public void SetErrorInfo(System.Exception exception) { }
-        public void SetErrorInfo(string type, string message, string? callStack) { }
-        public void SetTag(string key, double? value) { }
-        public void SetTag(string key, string? value) { }
-        public static Datadog.Trace.Ci.TestModule Create(string name) { }
-        public static Datadog.Trace.Ci.TestModule Create(string name, string framework, string frameworkVersion) { }
-        public static Datadog.Trace.Ci.TestModule Create(string name, string framework, string frameworkVersion, System.DateTimeOffset startDate) { }
+        string? Framework { get; }
+        string Name { get; }
+        System.DateTimeOffset StartTime { get; }
+        void Close();
+        void Close(System.TimeSpan? duration);
+        System.Threading.Tasks.Task CloseAsync();
+        System.Threading.Tasks.Task CloseAsync(System.TimeSpan? duration);
+        Datadog.Trace.Ci.ITestSuite GetOrCreateSuite(string name);
+        Datadog.Trace.Ci.ITestSuite GetOrCreateSuite(string name, System.DateTimeOffset? startDate);
+        void SetErrorInfo(System.Exception exception);
+        void SetErrorInfo(string type, string message, string? callStack);
+        void SetTag(string key, double? value);
+        void SetTag(string key, string? value);
     }
-    public class TestParameters
+    public interface ITestSession
     {
-        public TestParameters() { }
-        public System.Collections.Generic.Dictionary<string, object>? Arguments { get; set; }
-        public System.Collections.Generic.Dictionary<string, object>? Metadata { get; set; }
+        string? Command { get; }
+        string? Framework { get; }
+        System.DateTimeOffset StartTime { get; }
+        string? WorkingDirectory { get; }
+        void Close(Datadog.Trace.Ci.TestStatus status);
+        void Close(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration);
+        System.Threading.Tasks.Task CloseAsync(Datadog.Trace.Ci.TestStatus status);
+        System.Threading.Tasks.Task CloseAsync(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration);
+        Datadog.Trace.Ci.ITestModule CreateModule(string name);
+        Datadog.Trace.Ci.ITestModule CreateModule(string name, string framework, string frameworkVersion);
+        Datadog.Trace.Ci.ITestModule CreateModule(string name, string framework, string frameworkVersion, System.DateTimeOffset startDate);
+        void SetErrorInfo(System.Exception exception);
+        void SetErrorInfo(string type, string message, string? callStack);
+        void SetTag(string key, double? value);
+        void SetTag(string key, string? value);
     }
-    public sealed class TestSession
+    public interface ITestSuite
     {
-        public string? Command { get; }
-        public string? Framework { get; }
-        public System.DateTimeOffset StartTime { get; }
-        public string? WorkingDirectory { get; }
-        public void Close(Datadog.Trace.Ci.TestStatus status) { }
-        public void Close(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration) { }
-        public System.Threading.Tasks.Task CloseAsync(Datadog.Trace.Ci.TestStatus status) { }
-        public System.Threading.Tasks.Task CloseAsync(Datadog.Trace.Ci.TestStatus status, System.TimeSpan? duration) { }
-        public Datadog.Trace.Ci.TestModule CreateModule(string name) { }
-        public Datadog.Trace.Ci.TestModule CreateModule(string name, string framework, string frameworkVersion) { }
-        public Datadog.Trace.Ci.TestModule CreateModule(string name, string framework, string frameworkVersion, System.DateTimeOffset startDate) { }
-        public void SetErrorInfo(System.Exception exception) { }
-        public void SetErrorInfo(string type, string message, string? callStack) { }
-        public void SetTag(string key, double? value) { }
-        public void SetTag(string key, string? value) { }
-        public static Datadog.Trace.Ci.TestSession GetOrCreate(string command) { }
-        public static Datadog.Trace.Ci.TestSession GetOrCreate(string command, string workingDirectory) { }
-        public static Datadog.Trace.Ci.TestSession GetOrCreate(string command, string workingDirectory, string framework) { }
-        public static Datadog.Trace.Ci.TestSession GetOrCreate(string command, string workingDirectory, string framework, System.DateTimeOffset startDate) { }
-        public static Datadog.Trace.Ci.TestSession GetOrCreate(string command, string? workingDirectory, string? framework, System.DateTimeOffset? startDate, bool propagateEnvironmentVariables) { }
+        Datadog.Trace.Ci.ITestModule Module { get; }
+        string Name { get; }
+        System.DateTimeOffset StartTime { get; }
+        void Close();
+        void Close(System.TimeSpan? duration);
+        Datadog.Trace.Ci.ITest CreateTest(string name);
+        Datadog.Trace.Ci.ITest CreateTest(string name, System.DateTimeOffset startDate);
+        void SetErrorInfo(System.Exception exception);
+        void SetErrorInfo(string type, string message, string? callStack);
+        void SetTag(string key, double? value);
+        void SetTag(string key, string? value);
+    }
+    public sealed class TestModule : Datadog.Trace.Ci.ITestModule
+    {
+        public static Datadog.Trace.Ci.ITestModule Create(string name) { }
+        public static Datadog.Trace.Ci.ITestModule Create(string name, string framework, string frameworkVersion) { }
+        public static Datadog.Trace.Ci.ITestModule Create(string name, string framework, string frameworkVersion, System.DateTimeOffset startDate) { }
+    }
+    public sealed class TestSession : Datadog.Trace.Ci.ITestSession
+    {
+        public static Datadog.Trace.Ci.ITestSession GetOrCreate(string command) { }
+        public static Datadog.Trace.Ci.ITestSession GetOrCreate(string command, string workingDirectory) { }
+        public static Datadog.Trace.Ci.ITestSession GetOrCreate(string command, string workingDirectory, string framework) { }
+        public static Datadog.Trace.Ci.ITestSession GetOrCreate(string command, string workingDirectory, string framework, System.DateTimeOffset startDate) { }
+        public static Datadog.Trace.Ci.ITestSession GetOrCreate(string command, string? workingDirectory, string? framework, System.DateTimeOffset? startDate, bool propagateEnvironmentVariables) { }
     }
     public enum TestStatus
     {
         Pass = 0,
         Fail = 1,
         Skip = 2,
-    }
-    public sealed class TestSuite
-    {
-        public Datadog.Trace.Ci.TestModule Module { get; }
-        public string Name { get; }
-        public System.DateTimeOffset StartTime { get; }
-        public void Close() { }
-        public void Close(System.TimeSpan? duration) { }
-        public Datadog.Trace.Ci.Test CreateTest(string name) { }
-        public Datadog.Trace.Ci.Test CreateTest(string name, System.DateTimeOffset startDate) { }
-        public void SetErrorInfo(System.Exception exception) { }
-        public void SetErrorInfo(string type, string message, string? callStack) { }
-        public void SetTag(string key, double? value) { }
-        public void SetTag(string key, string? value) { }
     }
 }
 namespace Datadog.Trace.Ci.Coverage.Attributes

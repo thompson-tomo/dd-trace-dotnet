@@ -21,7 +21,7 @@ namespace Datadog.Trace.Ci;
 /// <summary>
 /// CI Visibility test
 /// </summary>
-public sealed class Test
+internal sealed class Test : ITest
 {
     private static readonly AsyncLocal<Test?> CurrentTest = new();
     private readonly Scope _scope;
@@ -79,21 +79,6 @@ public sealed class Test
     }
 
     /// <summary>
-    /// Gets the test name
-    /// </summary>
-    public string? Name => ((TestSpanTags)_scope.Span.Tags).Name;
-
-    /// <summary>
-    /// Gets the test start date
-    /// </summary>
-    public DateTimeOffset StartTime => _scope.Span.StartTime;
-
-    /// <summary>
-    /// Gets the test suite for this test
-    /// </summary>
-    public TestSuite Suite { get; }
-
-    /// <summary>
     /// Gets or sets the current Test
     /// </summary>
     internal static Test? Current
@@ -102,32 +87,33 @@ public sealed class Test
         set => CurrentTest.Value = value;
     }
 
+    /// <inheritdoc/>
+    public string? Name => ((TestSpanTags)_scope.Span.Tags).Name;
+
+    /// <inheritdoc/>
+    public DateTimeOffset StartTime => _scope.Span.StartTime;
+
     /// <summary>
-    /// Sets a string tag into the test
+    /// Gets the test suite for this test
     /// </summary>
-    /// <param name="key">Key of the tag</param>
-    /// <param name="value">Value of the tag</param>
+    public TestSuite Suite { get; }
+
+    /// <inheritdoc/>
+    ITestSuite ITest.Suite => Suite;
+
+    /// <inheritdoc/>
     public void SetTag(string key, string? value)
     {
         _scope.Span.SetTag(key, value);
     }
 
-    /// <summary>
-    /// Sets a number tag into the test
-    /// </summary>
-    /// <param name="key">Key of the tag</param>
-    /// <param name="value">Value of the tag</param>
+    /// <inheritdoc/>
     public void SetTag(string key, double? value)
     {
         _scope.Span.SetMetric(key, value);
     }
 
-    /// <summary>
-    /// Set Error Info
-    /// </summary>
-    /// <param name="type">Error type</param>
-    /// <param name="message">Error message</param>
-    /// <param name="callStack">Error callstack</param>
+    /// <inheritdoc/>
     public void SetErrorInfo(string type, string message, string? callStack)
     {
         var span = _scope.Span;
@@ -140,19 +126,13 @@ public sealed class Test
         }
     }
 
-    /// <summary>
-    /// Set Error Info from Exception
-    /// </summary>
-    /// <param name="exception">Exception instance</param>
+    /// <inheritdoc/>
     public void SetErrorInfo(Exception exception)
     {
         _scope.Span.SetException(exception);
     }
 
-    /// <summary>
-    /// Set Test method info
-    /// </summary>
-    /// <param name="methodInfo">Test MethodInfo instance</param>
+    /// <inheritdoc/>
     public void SetTestMethodInfo(MethodInfo methodInfo)
     {
         if (MethodSymbolResolver.Instance.TryGetMethodSymbol(methodInfo, out var methodSymbol))
@@ -184,10 +164,7 @@ public sealed class Test
         }
     }
 
-    /// <summary>
-    /// Set Test traits
-    /// </summary>
-    /// <param name="traits">Traits dictionary</param>
+    /// <inheritdoc/>
     public void SetTraits(Dictionary<string, List<string>> traits)
     {
         if (traits?.Count > 0)
@@ -197,24 +174,22 @@ public sealed class Test
         }
     }
 
-    /// <summary>
-    /// Set Test parameters
-    /// </summary>
-    /// <param name="parameters">TestParameters instance</param>
-    public void SetParameters(TestParameters parameters)
+    /// <inheritdoc/>
+    public void SetParameters(Dictionary<string, object>? arguments, Dictionary<string, object>? metadata)
     {
-        if (parameters is not null)
+        if (metadata is not null || arguments is not null)
         {
             var tags = (TestSpanTags)_scope.Span.Tags;
+            TestParameters parameters = new()
+            {
+                Arguments = arguments,
+                Metadata = metadata,
+            };
             tags.Parameters = parameters.ToJSON();
         }
     }
 
-    /// <summary>
-    /// Set benchmark metadata
-    /// </summary>
-    /// <param name="hostInfo">Host info</param>
-    /// <param name="jobInfo">Job info</param>
+    /// <inheritdoc/>
     public void SetBenchmarkMetadata(in BenchmarkHostInfo hostInfo, in BenchmarkJobInfo jobInfo)
     {
         ((TestSpanTags)_scope.Span.Tags).Type = TestTags.TypeBenchmark;
@@ -253,12 +228,7 @@ public sealed class Test
         }
     }
 
-    /// <summary>
-    /// Add benchmark data
-    /// </summary>
-    /// <param name="measureType">Measure type</param>
-    /// <param name="info">Measure info</param>
-    /// <param name="statistics">Statistics values</param>
+    /// <inheritdoc/>
     public void AddBenchmarkData(BenchmarkMeasureType measureType, string info, in BenchmarkDiscreteStats statistics)
     {
         var measureTypeAsString = measureType switch
@@ -302,31 +272,19 @@ public sealed class Test
         }
     }
 
-    /// <summary>
-    /// Close test
-    /// </summary>
-    /// <param name="status">Test status</param>
+    /// <inheritdoc/>
     public void Close(TestStatus status)
     {
         Close(status, null, null);
     }
 
-    /// <summary>
-    /// Close test
-    /// </summary>
-    /// <param name="status">Test status</param>
-    /// <param name="duration">Duration of the test suite</param>
+    /// <inheritdoc/>
     public void Close(TestStatus status, TimeSpan? duration)
     {
         Close(status, duration, null);
     }
 
-    /// <summary>
-    /// Close test
-    /// </summary>
-    /// <param name="status">Test status</param>
-    /// <param name="duration">Duration of the test suite</param>
-    /// <param name="skipReason">In case </param>
+    /// <inheritdoc/>
     public void Close(TestStatus status, TimeSpan? duration, string? skipReason)
     {
         if (Interlocked.Exchange(ref _finished, 1) == 1)
@@ -413,5 +371,18 @@ public sealed class Test
     internal ISpan GetInternalSpan()
     {
         return _scope.Span;
+    }
+
+    /// <summary>
+    /// Set Test parameters
+    /// </summary>
+    /// <param name="parameters">TestParameters instance</param>
+    internal void SetParameters(TestParameters parameters)
+    {
+        if (parameters is not null)
+        {
+            var tags = (TestSpanTags)_scope.Span.Tags;
+            tags.Parameters = parameters.ToJSON();
+        }
     }
 }

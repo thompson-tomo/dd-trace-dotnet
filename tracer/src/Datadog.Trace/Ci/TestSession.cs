@@ -23,7 +23,7 @@ namespace Datadog.Trace.Ci;
 /// <summary>
 /// CI Visibility test session
 /// </summary>
-public sealed class TestSession
+public sealed partial class TestSession : ITestSession
 {
     private static readonly AsyncLocal<TestSession?> CurrentSession = new();
     private readonly Span _span;
@@ -98,26 +98,6 @@ public sealed class TestSession
     }
 
     /// <summary>
-    /// Gets the session command
-    /// </summary>
-    public string? Command { get; }
-
-    /// <summary>
-    /// Gets the session command working directory
-    /// </summary>
-    public string? WorkingDirectory { get; }
-
-    /// <summary>
-    /// Gets the test session start date
-    /// </summary>
-    public DateTimeOffset StartTime => _span.StartTime;
-
-    /// <summary>
-    /// Gets the test framework
-    /// </summary>
-    public string? Framework { get; }
-
-    /// <summary>
     /// Gets or sets the current TestSession
     /// </summary>
     internal static TestSession? Current
@@ -125,6 +105,26 @@ public sealed class TestSession
         get => CurrentSession.Value;
         set => CurrentSession.Value = value;
     }
+
+    /// <summary>
+    /// Gets the session command
+    /// </summary>
+    internal string? Command { get; }
+
+    /// <summary>
+    /// Gets the session command working directory
+    /// </summary>
+    internal string? WorkingDirectory { get; }
+
+    /// <summary>
+    /// Gets the test session start date
+    /// </summary>
+    internal DateTimeOffset StartTime => _span.StartTime;
+
+    /// <summary>
+    /// Gets the test framework
+    /// </summary>
+    internal string? Framework { get; }
 
     internal TestSessionSpanTags Tags => (TestSessionSpanTags)_span.Tags;
 
@@ -134,7 +134,7 @@ public sealed class TestSession
     /// <param name="command">Test session command</param>
     /// <returns>New test session instance</returns>
     [PublicApi]
-    public static TestSession GetOrCreate(string command)
+    public static ITestSession GetOrCreate(string command)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
         return InternalGetOrCreate(command);
@@ -162,7 +162,7 @@ public sealed class TestSession
     /// <param name="workingDirectory">Test session working directory</param>
     /// <returns>New test session instance</returns>
     [PublicApi]
-    public static TestSession GetOrCreate(string command, string workingDirectory)
+    public static ITestSession GetOrCreate(string command, string workingDirectory)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
         return InternalGetOrCreate(command, workingDirectory);
@@ -192,7 +192,7 @@ public sealed class TestSession
     /// <param name="framework">Testing framework name</param>
     /// <returns>New test session instance</returns>
     [PublicApi]
-    public static TestSession GetOrCreate(string command, string workingDirectory, string framework)
+    public static ITestSession GetOrCreate(string command, string workingDirectory, string framework)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
         return InternalGetOrCreate(command, workingDirectory, framework);
@@ -224,7 +224,7 @@ public sealed class TestSession
     /// <param name="startDate">Test session start date</param>
     /// <returns>New test session instance</returns>
     [PublicApi]
-    public static TestSession GetOrCreate(string command, string workingDirectory, string framework, DateTimeOffset startDate)
+    public static ITestSession GetOrCreate(string command, string workingDirectory, string framework, DateTimeOffset startDate)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
         return InternalGetOrCreate(command, workingDirectory, framework, startDate);
@@ -258,7 +258,7 @@ public sealed class TestSession
     /// <param name="propagateEnvironmentVariables">Propagate session data through environment variables (out of proc session)</param>
     /// <returns>New test session instance</returns>
     [PublicApi]
-    public static TestSession GetOrCreate(string command, string? workingDirectory, string? framework, DateTimeOffset? startDate, bool propagateEnvironmentVariables)
+    public static ITestSession GetOrCreate(string command, string? workingDirectory, string? framework, DateTimeOffset? startDate, bool propagateEnvironmentVariables)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
         return InternalGetOrCreate(command, workingDirectory, framework, startDate, propagateEnvironmentVariables);
@@ -288,7 +288,7 @@ public sealed class TestSession
     /// </summary>
     /// <param name="key">Key of the tag</param>
     /// <param name="value">Value of the tag</param>
-    public void SetTag(string key, string? value)
+    internal void SetTag(string key, string? value)
     {
         _span.SetTag(key, value);
     }
@@ -298,7 +298,7 @@ public sealed class TestSession
     /// </summary>
     /// <param name="key">Key of the tag</param>
     /// <param name="value">Value of the tag</param>
-    public void SetTag(string key, double? value)
+    internal void SetTag(string key, double? value)
     {
         _span.SetMetric(key, value);
     }
@@ -309,7 +309,7 @@ public sealed class TestSession
     /// <param name="type">Error type</param>
     /// <param name="message">Error message</param>
     /// <param name="callStack">Error callstack</param>
-    public void SetErrorInfo(string type, string message, string? callStack)
+    internal void SetErrorInfo(string type, string message, string? callStack)
     {
         var span = _span;
         span.Error = true;
@@ -325,7 +325,7 @@ public sealed class TestSession
     /// Set Error Info from Exception
     /// </summary>
     /// <param name="exception">Exception instance</param>
-    public void SetErrorInfo(Exception exception)
+    internal void SetErrorInfo(Exception exception)
     {
         _span.SetException(exception);
     }
@@ -334,7 +334,7 @@ public sealed class TestSession
     /// Close test module
     /// </summary>
     /// <param name="status">Test session status</param>
-    public void Close(TestStatus status)
+    internal void Close(TestStatus status)
     {
         Close(status, null);
     }
@@ -344,7 +344,7 @@ public sealed class TestSession
     /// </summary>
     /// <param name="status">Test session status</param>
     /// <param name="duration">Duration of the test module</param>
-    public void Close(TestStatus status, TimeSpan? duration)
+    internal void Close(TestStatus status, TimeSpan? duration)
     {
         if (InternalClose(status, duration))
         {
@@ -358,7 +358,7 @@ public sealed class TestSession
     /// </summary>
     /// <param name="status">Test session status</param>
     /// <returns>Task instance</returns>
-    public Task CloseAsync(TestStatus status)
+    internal Task CloseAsync(TestStatus status)
     {
         return CloseAsync(status, null);
     }
@@ -369,7 +369,7 @@ public sealed class TestSession
     /// <param name="status">Test session status</param>
     /// <param name="duration">Duration of the test module</param>
     /// <returns>Task instance</returns>
-    public Task CloseAsync(TestStatus status, TimeSpan? duration)
+    internal Task CloseAsync(TestStatus status, TimeSpan? duration)
     {
         if (InternalClose(status, duration))
         {
@@ -440,7 +440,7 @@ public sealed class TestSession
     /// <param name="name">Test module name</param>
     /// <returns>New test module instance</returns>
     [PublicApi]
-    public TestModule CreateModule(string name)
+    internal ITestModule CreateModule(string name)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
         return InternalCreateModule(name);
@@ -464,7 +464,7 @@ public sealed class TestSession
     /// <param name="frameworkVersion">Testing framework version</param>
     /// <returns>New test module instance</returns>
     [PublicApi]
-    public TestModule CreateModule(string name, string framework, string frameworkVersion)
+    internal ITestModule CreateModule(string name, string framework, string frameworkVersion)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
         return InternalCreateModule(name, framework, frameworkVersion);
@@ -491,7 +491,7 @@ public sealed class TestSession
     /// <param name="startDate">Test session start date</param>
     /// <returns>New test module instance</returns>
     [PublicApi]
-    public TestModule CreateModule(string name, string framework, string frameworkVersion, DateTimeOffset startDate)
+    internal ITestModule CreateModule(string name, string framework, string frameworkVersion, DateTimeOffset startDate)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
         return InternalCreateModule(name, framework, frameworkVersion, startDate);

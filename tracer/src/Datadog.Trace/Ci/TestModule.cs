@@ -30,7 +30,7 @@ namespace Datadog.Trace.Ci;
 /// <summary>
 /// CI Visibility test module
 /// </summary>
-public sealed class TestModule
+public sealed partial class TestModule : ITestModule
 {
     private static readonly IDatadogLogger Log = DatadogLogging.GetLoggerFor<TestModule>();
 
@@ -186,21 +186,6 @@ public sealed class TestModule
     }
 
     /// <summary>
-    /// Gets the module name
-    /// </summary>
-    public string Name { get; }
-
-    /// <summary>
-    /// Gets the test module start date
-    /// </summary>
-    public DateTimeOffset StartTime => _span.StartTime;
-
-    /// <summary>
-    /// Gets the test framework
-    /// </summary>
-    public string? Framework { get; }
-
-    /// <summary>
     /// Gets or sets the current TestModule
     /// </summary>
     internal static TestModule? Current
@@ -208,6 +193,21 @@ public sealed class TestModule
         get => CurrentModule.Value;
         set => CurrentModule.Value = value;
     }
+
+    /// <summary>
+    /// Gets the module name
+    /// </summary>
+    internal string Name { get; }
+
+    /// <summary>
+    /// Gets the test module start date
+    /// </summary>
+    internal DateTimeOffset StartTime => _span.StartTime;
+
+    /// <summary>
+    /// Gets the test framework
+    /// </summary>
+    internal string? Framework { get; }
 
     internal TestModuleSpanTags Tags => (TestModuleSpanTags)_span.Tags;
 
@@ -217,7 +217,7 @@ public sealed class TestModule
     /// <param name="name">Test module name</param>
     /// <returns>New test module instance</returns>
     [PublicApi]
-    public static TestModule Create(string name)
+    public static ITestModule Create(string name)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
         return InternalCreate(name);
@@ -241,7 +241,7 @@ public sealed class TestModule
     /// <param name="frameworkVersion">Testing framework version</param>
     /// <returns>New test module instance</returns>
     [PublicApi]
-    public static TestModule Create(string name, string framework, string frameworkVersion)
+    public static ITestModule Create(string name, string framework, string frameworkVersion)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
         return InternalCreate(name, framework, frameworkVersion);
@@ -268,7 +268,7 @@ public sealed class TestModule
     /// <param name="startDate">Test session start date</param>
     /// <returns>New test module instance</returns>
     [PublicApi]
-    public static TestModule Create(string name, string framework, string frameworkVersion, DateTimeOffset startDate)
+    public static ITestModule Create(string name, string framework, string frameworkVersion, DateTimeOffset startDate)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
         return InternalCreate(name, framework, frameworkVersion, startDate);
@@ -292,7 +292,7 @@ public sealed class TestModule
     /// </summary>
     /// <param name="key">Key of the tag</param>
     /// <param name="value">Value of the tag</param>
-    public void SetTag(string key, string? value)
+    internal void SetTag(string key, string? value)
     {
         _span.SetTag(key, value);
     }
@@ -302,7 +302,7 @@ public sealed class TestModule
     /// </summary>
     /// <param name="key">Key of the tag</param>
     /// <param name="value">Value of the tag</param>
-    public void SetTag(string key, double? value)
+    internal void SetTag(string key, double? value)
     {
         _span.SetMetric(key, value);
     }
@@ -313,7 +313,7 @@ public sealed class TestModule
     /// <param name="type">Error type</param>
     /// <param name="message">Error message</param>
     /// <param name="callStack">Error callstack</param>
-    public void SetErrorInfo(string type, string message, string? callStack)
+    internal void SetErrorInfo(string type, string message, string? callStack)
     {
         var span = _span;
         span.Error = true;
@@ -329,7 +329,7 @@ public sealed class TestModule
     /// Set Error Info from Exception
     /// </summary>
     /// <param name="exception">Exception instance</param>
-    public void SetErrorInfo(Exception exception)
+    internal void SetErrorInfo(Exception exception)
     {
         _span.SetException(exception);
     }
@@ -338,7 +338,7 @@ public sealed class TestModule
     /// Close test module
     /// </summary>
     /// <remarks>Use CloseAsync() version whenever possible.</remarks>
-    public void Close()
+    internal void Close()
     {
         Close(null);
     }
@@ -348,7 +348,7 @@ public sealed class TestModule
     /// </summary>
     /// <remarks>Use CloseAsync() version whenever possible.</remarks>
     /// <param name="duration">Duration of the test module</param>
-    public void Close(TimeSpan? duration)
+    internal void Close(TimeSpan? duration)
     {
         if (InternalClose(duration))
         {
@@ -361,7 +361,7 @@ public sealed class TestModule
     /// Close test module
     /// </summary>
     /// <returns>Task instance </returns>
-    public Task CloseAsync()
+    internal Task CloseAsync()
     {
         return CloseAsync(null);
     }
@@ -371,7 +371,7 @@ public sealed class TestModule
     /// </summary>
     /// <param name="duration">Duration of the test module</param>
     /// <returns>Task instance </returns>
-    public Task CloseAsync(TimeSpan? duration)
+    internal Task CloseAsync(TimeSpan? duration)
     {
         if (InternalClose(duration))
         {
@@ -502,7 +502,7 @@ public sealed class TestModule
     /// <param name="name">Name of the test suite</param>
     /// <returns>Test suite instance</returns>
     [PublicApi]
-    public TestSuite GetOrCreateSuite(string name)
+    internal ITestSuite GetOrCreateSuite(string name)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Suite);
         return InternalGetOrCreateSuite(name, null);
@@ -525,7 +525,7 @@ public sealed class TestModule
     /// <param name="startDate">Test suite start date</param>
     /// <returns>Test suite instance</returns>
     [PublicApi]
-    public TestSuite GetOrCreateSuite(string name, DateTimeOffset? startDate)
+    internal ITestSuite GetOrCreateSuite(string name, DateTimeOffset? startDate)
     {
         TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Suite);
         return InternalGetOrCreateSuite(name, startDate);
