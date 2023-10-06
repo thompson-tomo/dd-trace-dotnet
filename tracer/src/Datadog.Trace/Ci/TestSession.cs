@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Datadog.Trace.Ci.Tagging;
 using Datadog.Trace.Ci.Tags;
 using Datadog.Trace.Ci.Telemetry;
+using Datadog.Trace.DuckTyping;
 using Datadog.Trace.Propagators;
 using Datadog.Trace.SourceGenerators;
 using Datadog.Trace.Telemetry;
@@ -136,8 +137,8 @@ public sealed partial class TestSession : ITestSession
     [PublicApi]
     public static ITestSession GetOrCreate(string command)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
-        return InternalGetOrCreate(command);
+        var testSession = ManualGetOrCreate(command, workingDirectory: null, framework: null, startDate: null, propagateEnvironmentVariables: false);
+        return Convert(testSession);
     }
 
     /// <summary>
@@ -164,8 +165,8 @@ public sealed partial class TestSession : ITestSession
     [PublicApi]
     public static ITestSession GetOrCreate(string command, string workingDirectory)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
-        return InternalGetOrCreate(command, workingDirectory);
+        var testSession = ManualGetOrCreate(command, workingDirectory, framework: null, startDate: null, propagateEnvironmentVariables: false);
+        return Convert(testSession);
     }
 
     /// <summary>
@@ -194,8 +195,8 @@ public sealed partial class TestSession : ITestSession
     [PublicApi]
     public static ITestSession GetOrCreate(string command, string workingDirectory, string framework)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
-        return InternalGetOrCreate(command, workingDirectory, framework);
+        var testSession = ManualGetOrCreate(command, workingDirectory, framework, startDate: null, propagateEnvironmentVariables: false);
+        return Convert(testSession);
     }
 
     /// <summary>
@@ -226,8 +227,8 @@ public sealed partial class TestSession : ITestSession
     [PublicApi]
     public static ITestSession GetOrCreate(string command, string workingDirectory, string framework, DateTimeOffset startDate)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
-        return InternalGetOrCreate(command, workingDirectory, framework, startDate);
+        var testSession = ManualGetOrCreate(command, workingDirectory, framework, startDate, propagateEnvironmentVariables: false);
+        return Convert(testSession);
     }
 
     /// <summary>
@@ -260,8 +261,8 @@ public sealed partial class TestSession : ITestSession
     [PublicApi]
     public static ITestSession GetOrCreate(string command, string? workingDirectory, string? framework, DateTimeOffset? startDate, bool propagateEnvironmentVariables)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
-        return InternalGetOrCreate(command, workingDirectory, framework, startDate, propagateEnvironmentVariables);
+        var testSession = ManualGetOrCreate(command, workingDirectory, framework, startDate, propagateEnvironmentVariables);
+        return Convert(testSession);
     }
 
     /// <summary>
@@ -281,6 +282,43 @@ public sealed partial class TestSession : ITestSession
         }
 
         return new TestSession(command, workingDirectory, framework, startDate, propagateEnvironmentVariables);
+    }
+
+    /// <summary>
+    /// Get or create a new Test Session
+    /// </summary>
+    /// <param name="command">Test session command</param>
+    /// <param name="workingDirectory">Test session working directory</param>
+    /// <param name="framework">Testing framework name</param>
+    /// <param name="startDate">Test session start date</param>
+    /// <param name="propagateEnvironmentVariables">Propagate session data through environment variables (out of proc session)</param>
+    /// <returns>New test session instance</returns>
+    internal static TestSession ManualGetOrCreate(string command, string? workingDirectory, string? framework, DateTimeOffset? startDate, bool propagateEnvironmentVariables)
+    {
+        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Session);
+
+        if (Current is { } current)
+        {
+            return current;
+        }
+
+        return new TestSession(command, workingDirectory, framework, startDate, propagateEnvironmentVariables);
+    }
+
+    private static ITestSession Convert(object testSession)
+    {
+        if (testSession is TestSession manualTestSession)
+        {
+            return manualTestSession;
+        }
+        else if (testSession.TryDuckCast<IInternalTestSession>(out var automaticTestSession))
+        {
+            return new TestSessionProxy(automaticTestSession);
+        }
+        else
+        {
+            throw new Exception();
+        }
     }
 
     /// <summary>
@@ -340,6 +378,12 @@ public sealed partial class TestSession : ITestSession
     }
 
     /// <summary>
+    /// Close test module. This method is used for duck typing.
+    /// </summary>
+    /// <param name="status">Test session status</param>
+    internal void Close(int status) => Close((TestStatus)status);
+
+    /// <summary>
     /// Close test module
     /// </summary>
     /// <param name="status">Test session status</param>
@@ -354,6 +398,13 @@ public sealed partial class TestSession : ITestSession
     }
 
     /// <summary>
+    /// Close test module. This method is used for duck typing.
+    /// </summary>
+    /// <param name="status">Test session status</param>
+    /// <param name="duration">Duration of the test module</param>
+    internal void Close(int status, TimeSpan? duration) => Close((TestStatus)status, duration);
+
+    /// <summary>
     /// Close test module
     /// </summary>
     /// <param name="status">Test session status</param>
@@ -362,6 +413,13 @@ public sealed partial class TestSession : ITestSession
     {
         return CloseAsync(status, null);
     }
+
+    /// <summary>
+    /// Close test module. This method is used for duck typing.
+    /// </summary>
+    /// <param name="status">Test session status</param>
+    /// <returns>Task instance</returns>
+    internal Task CloseAsync(int status) => CloseAsync((TestStatus)status, null);
 
     /// <summary>
     /// Close test module
@@ -379,6 +437,14 @@ public sealed partial class TestSession : ITestSession
 
         return Task.CompletedTask;
     }
+
+    /// <summary>
+    /// Close test module. This method is used for duck typing.
+    /// </summary>
+    /// <param name="status">Test session status</param>
+    /// <param name="duration">Duration of the test module</param>
+    /// <returns>Task instance</returns>
+    internal Task CloseAsync(int status, TimeSpan? duration) => CloseAsync((TestStatus)status, duration);
 
     /// <summary>
     /// Close test module
