@@ -16,6 +16,7 @@ using Datadog.Trace.Ci.Coverage;
 using Datadog.Trace.Ci.Tagging;
 using Datadog.Trace.Ci.Tags;
 using Datadog.Trace.Ci.Telemetry;
+using Datadog.Trace.DuckTyping;
 using Datadog.Trace.ExtensionMethods;
 using Datadog.Trace.Logging;
 using Datadog.Trace.Propagators;
@@ -219,8 +220,8 @@ public sealed partial class TestModule : ITestModule
     [PublicApi]
     public static ITestModule Create(string name)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
-        return InternalCreate(name);
+        var testModule = ManualCreate(name, framework: null, frameworkVersion: null, startDate: null);
+        return Convert(testModule);
     }
 
     /// <summary>
@@ -243,8 +244,8 @@ public sealed partial class TestModule : ITestModule
     [PublicApi]
     public static ITestModule Create(string name, string framework, string frameworkVersion)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
-        return InternalCreate(name, framework, frameworkVersion);
+        var testModule = ManualCreate(name, framework, frameworkVersion, startDate: null);
+        return Convert(testModule);
     }
 
     /// <summary>
@@ -270,8 +271,8 @@ public sealed partial class TestModule : ITestModule
     [PublicApi]
     public static ITestModule Create(string name, string framework, string frameworkVersion, DateTimeOffset startDate)
     {
-        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
-        return InternalCreate(name, framework, frameworkVersion, startDate);
+        var testModule = ManualCreate(name, framework, frameworkVersion, startDate);
+        return Convert(testModule);
     }
 
     /// <summary>
@@ -282,9 +283,39 @@ public sealed partial class TestModule : ITestModule
     /// <param name="frameworkVersion">Testing framework version</param>
     /// <param name="startDate">Test session start date</param>
     /// <returns>New test module instance</returns>
-    internal static TestModule InternalCreate(string name, string framework, string frameworkVersion, DateTimeOffset startDate)
+    internal static TestModule InternalCreate(string name, string framework, string frameworkVersion, DateTimeOffset? startDate)
     {
         return new TestModule(name, framework, frameworkVersion, startDate);
+    }
+
+    /// <summary>
+    /// Create a new Test Module
+    /// </summary>
+    /// <param name="name">Test module name</param>
+    /// <param name="framework">Testing framework name</param>
+    /// <param name="frameworkVersion">Testing framework version</param>
+    /// <param name="startDate">Test session start date</param>
+    /// <returns>New test module instance</returns>
+    private static object ManualCreate(string name, string? framework, string? frameworkVersion, DateTimeOffset? startDate)
+    {
+        TelemetryFactory.Metrics.RecordCountCIVisibilityManualApiEvent(MetricTags.CIVisibilityTestingEventType.Module);
+        return new TestModule(name, framework, frameworkVersion, startDate);
+    }
+
+    private static ITestModule Convert(object testModule)
+    {
+        if (testModule is TestModule manualTestModule)
+        {
+            return manualTestModule;
+        }
+        else if (testModule.TryDuckCast<ITestModule>(out var automaticTestModule))
+        {
+            return automaticTestModule;
+        }
+        else
+        {
+            throw new Exception();
+        }
     }
 
     /// <summary>
