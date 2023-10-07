@@ -40,13 +40,13 @@ internal class TestSessionProxy : ITestSession
         => _testSession.CloseAsync((int)status, duration);
 
     ITestModule ITestSession.CreateModule(string name)
-        => _testSession.CreateModule(name);
+        => new TestModuleProxy(_testSession.CreateModule(name));
 
     ITestModule ITestSession.CreateModule(string name, string framework, string frameworkVersion)
-        => _testSession.CreateModule(name, framework, frameworkVersion);
+        => new TestModuleProxy(_testSession.CreateModule(name, framework, frameworkVersion));
 
     ITestModule ITestSession.CreateModule(string name, string framework, string frameworkVersion, DateTimeOffset startDate)
-        => _testSession.CreateModule(name, framework, frameworkVersion, startDate);
+        => new TestModuleProxy(_testSession.CreateModule(name, framework, frameworkVersion, startDate));
 
     void ITestSession.SetErrorInfo(string type, string message, string? callStack)
         => _testSession.SetErrorInfo(type, message, callStack);

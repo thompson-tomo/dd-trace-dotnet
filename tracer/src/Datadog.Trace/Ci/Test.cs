@@ -189,6 +189,12 @@ internal sealed class Test : ITest
         }
     }
 
+    // TODO: Figure out what do to here. To resolve the version conflict, we plan to give the user a duck type proxy
+    // that wraps the underlying type from the automatic assembly. For example, TestSuite.CreateTest will invoke the
+    // TestSuite.CreateTest from the automatic assembly and return a Test object that is duck typed so it is assignable
+    // to the manual assembly's ITest interface. The big struggle here is if we can write the ITest interface with an
+    // enum in the public API or if we would need to have methods like CloseWithPass, CloseWithFail, CloseWithSkip
+
     /// <inheritdoc/>
     public void SetBenchmarkMetadata(in BenchmarkHostInfo hostInfo, in BenchmarkJobInfo jobInfo)
     {
@@ -278,11 +284,15 @@ internal sealed class Test : ITest
         Close(status, null, null);
     }
 
+    public void Close(int status) => Close((TestStatus)status);
+
     /// <inheritdoc/>
     public void Close(TestStatus status, TimeSpan? duration)
     {
         Close(status, duration, null);
     }
+
+    public void Close(int status, TimeSpan? duration) => Close((TestStatus)status, duration);
 
     /// <inheritdoc/>
     public void Close(TestStatus status, TimeSpan? duration, string? skipReason)
@@ -362,6 +372,8 @@ internal sealed class Test : ITest
         Current = null;
         CIVisibility.Log.Debug("######### Test Closed: {Name} ({Suite} | {Module}) | {Status}", Name, Suite.Name, Suite.Module.Name, tags.Status);
     }
+
+    public void Close(int status, TimeSpan? duration, string? skipReason) => Close((TestStatus)status, duration, skipReason);
 
     internal void ResetStartTime()
     {

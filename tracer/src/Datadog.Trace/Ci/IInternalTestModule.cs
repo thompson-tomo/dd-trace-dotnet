@@ -1,4 +1,4 @@
-// <copyright file="IInternalTestSession.cs" company="Datadog">
+// <copyright file="IInternalTestModule.cs" company="Datadog">
 // Unless explicitly stated otherwise all files in this repository are licensed under the Apache 2 License.
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2017 Datadog, Inc.
 // </copyright>
@@ -10,20 +10,18 @@ using System.Threading.Tasks;
 
 namespace Datadog.Trace.Ci;
 
-internal interface IInternalTestSession
+/// <summary>
+/// CI Visibility test module
+/// </summary>
+internal interface IInternalTestModule
 {
     /// <summary>
-    /// Gets the session command
+    /// Gets the module name
     /// </summary>
-    string? Command { get; }
+    string Name { get; }
 
     /// <summary>
-    /// Gets the session command working directory
-    /// </summary>
-    string? WorkingDirectory { get; }
-
-    /// <summary>
-    /// Gets the test session start date
+    /// Gets the test module start date
     /// </summary>
     DateTimeOffset StartTime { get; }
 
@@ -63,54 +61,41 @@ internal interface IInternalTestSession
     /// <summary>
     /// Close test module
     /// </summary>
-    /// <param name="status">Test session status</param>
-    void Close(int status);
+    /// <remarks>Use CloseAsync() version whenever possible.</remarks>
+    void Close();
 
     /// <summary>
     /// Close test module
     /// </summary>
-    /// <param name="status">Test session status</param>
+    /// <remarks>Use CloseAsync() version whenever possible.</remarks>
     /// <param name="duration">Duration of the test module</param>
-    void Close(int status, TimeSpan? duration);
+    void Close(TimeSpan? duration);
 
     /// <summary>
     /// Close test module
     /// </summary>
-    /// <param name="status">Test session status</param>
-    /// <returns>Task instance</returns>
-    Task CloseAsync(int status);
+    /// <returns>Task instance </returns>
+    Task CloseAsync();
 
     /// <summary>
     /// Close test module
     /// </summary>
-    /// <param name="status">Test session status</param>
     /// <param name="duration">Duration of the test module</param>
-    /// <returns>Task instance</returns>
-    Task CloseAsync(int status, TimeSpan? duration);
+    /// <returns>Task instance </returns>
+    Task CloseAsync(TimeSpan? duration);
 
     /// <summary>
-    /// Create a new Test Module
+    /// Create a new test suite for this session
     /// </summary>
-    /// <param name="name">Test module name</param>
-    /// <returns>New test module instance</returns>
-    object CreateModule(string name);
+    /// <param name="name">Name of the test suite</param>
+    /// <returns>Test suite instance</returns>
+    object GetOrCreateSuite(string name);
 
     /// <summary>
-    /// Create a new Test Module
+    /// Create a new test suite for this session
     /// </summary>
-    /// <param name="name">Test module name</param>
-    /// <param name="framework">Testing framework name</param>
-    /// <param name="frameworkVersion">Testing framework version</param>
-    /// <returns>New test module instance</returns>
-    object CreateModule(string name, string framework, string frameworkVersion);
-
-    /// <summary>
-    /// Create a new Test Module
-    /// </summary>
-    /// <param name="name">Test module name</param>
-    /// <param name="framework">Testing framework name</param>
-    /// <param name="frameworkVersion">Testing framework version</param>
-    /// <param name="startDate">Test session start date</param>
-    /// <returns>New test module instance</returns>
-    object CreateModule(string name, string framework, string frameworkVersion, DateTimeOffset startDate);
+    /// <param name="name">Name of the test suite</param>
+    /// <param name="startDate">Test suite start date</param>
+    /// <returns>Test suite instance</returns>
+    object GetOrCreateSuite(string name, DateTimeOffset? startDate);
 }
