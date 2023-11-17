@@ -587,8 +587,8 @@ partial class Build : NukeBuild
                             (publishFramework: TargetFramework.NET5_0, "5.0-buster-slim"),
                             (publishFramework: TargetFramework.NET5_0, "5.0-focal"),
                         },
-                        installer: "datadog-dotnet-apm_*_arm64.deb",
-                        installCmd: "dpkg -i ./datadog-dotnet-apm_*_arm64.deb",
+                        installer: "datadog-apm-library-dotnet_*_arm64.deb",
+                        installCmd: "dpkg -i ./datadog-apm-library-dotnet_*_arm64.deb",
                         linuxArtifacts: "linux-packages-linux-arm64",
                         runtimeId: "linux-arm64",
                         dockerName: "mcr.microsoft.com/dotnet/aspnet"
@@ -603,8 +603,8 @@ partial class Build : NukeBuild
                             (publishFramework: TargetFramework.NET6_0, "34-6.0"),
                             (publishFramework: TargetFramework.NET5_0, "35-5.0"),
                         },
-                        installer: "datadog-dotnet-apm*-1.aarch64.rpm",
-                        installCmd: "rpm -Uvh ./datadog-dotnet-apm*-1.aarch64.rpm",
+                        installer: "datadog-apm-library-dotnet*-1.aarch64.rpm",
+                        installCmd: "rpm -Uvh ./datadog-apm-library-dotnet*-1.aarch64.rpm",
                         linuxArtifacts: "linux-packages-linux-arm64",
                         runtimeId: "linux-arm64",
                         dockerName: "andrewlock/dotnet-fedora-arm64"
