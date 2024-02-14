@@ -55,6 +55,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.5" />
     <PackageReference Include="Npgsql" Version="4.0.11" />
     <PackageReference Include="RestSharp" Version="110.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup Condition=" $(TargetFramework.StartsWith('netcoreapp')) ">
@@ -67,6 +68,7 @@
     <PackageReference Include="System.DirectoryServices.Protocols" Version="5.0.0" />
     <PackageReference Include="System.DirectoryServices.AccountManagement" Version="5.0.0" />
     <PackageReference Include="RestSharp" Version="108.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net5.0'">
