@@ -96,7 +96,7 @@ public class AspNetMvc5IntegratedWithIast : AspNetMvc5IastTests
     [InlineData(AddressesConstants.RequestQuery, "/Iast/StackTraceLeak")]
     public async Task TestStackTraceLeak(string test, string url)
     {
-        await TestStrictTransportSecurityHeaderMissingVulnerability(test, url);
+        await TestVulnerability(test, url, "StacktraceLeak");
     }
 }
 
@@ -259,6 +259,16 @@ public abstract class AspNetMvc5IastTests : AspNetBase, IClassFixture<IisFixture
         await VerifyHelper.VerifySpans(spansFiltered, settings)
                           .UseFileName($"{_testName}.path={sanitisedPath}")
                           .DisableRequireUniquePrefix();
+    }
+
+    [Trait("Category", "EndToEnd")]
+    [Trait("RunOnWindows", "True")]
+    [Trait("LoadFromGAC", "True")]
+    [SkippableTheory]
+    [InlineData(AddressesConstants.RequestQuery, "/Iast/randomCustomSpan")]
+    public async Task TestCustomInstrumentation(string test, string url)
+    {
+        await TestVulnerability(test, url, "CustomInstrumentation" + (_classicMode ? ".Classic" : ".Integrated"));
     }
 
     [Trait("Category", "EndToEnd")]
@@ -481,12 +491,12 @@ public abstract class AspNetMvc5IastTests : AspNetBase, IClassFixture<IisFixture
                           .DisableRequireUniquePrefix();
     }
 
-    protected async Task TestStrictTransportSecurityHeaderMissingVulnerability(string test, string url)
+    protected async Task TestVulnerability(string test, string url, string file)
     {
         var sanitisedUrl = VerifyHelper.SanitisePathsForVerify(url);
         var settings = VerifyHelper.GetSpanVerifierSettings(test, sanitisedUrl);
         var spans = await SendRequestsAsync(_iisFixture.Agent, [url]);
-        var filename = GetFileName("StackTraceLeak");
+        var filename = GetFileName(file);
         var spansFiltered = spans.Where(x => x.Type == SpanTypes.Web).ToList();
         settings.AddIastScrubbing();
         await VerifyHelper.VerifySpans(spansFiltered, settings)

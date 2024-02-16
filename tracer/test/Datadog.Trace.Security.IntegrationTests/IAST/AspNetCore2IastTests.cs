@@ -176,6 +176,25 @@ public class AspNetCore2IastTestsFullSamplingEnabled : AspNetCore2IastTestsFullS
                           .DisableRequireUniquePrefix();
     }
 
+    [Fact]
+    [Trait("Category", "ArmUnsupported")]
+    [Trait("RunOnWindows", "True")]
+    public async Task TestCustomInstrumentation()
+    {
+        var filename = "Iast.CustomInstrumentation.AspNetCore2";
+        var url = "/Iast/randomCustomSpan";
+        IncludeAllHttpSpans = true;
+        await TryStartApp();
+        var agent = Fixture.Agent;
+        var spans = await SendRequestsAsync(agent, [url]);
+
+        var settings = VerifyHelper.GetSpanVerifierSettings();
+        settings.AddIastScrubbing();
+        await VerifyHelper.VerifySpans(spans, settings)
+                          .UseFileName(filename)
+                          .DisableRequireUniquePrefix();
+    }
+
     [SkippableFact]
     [Trait("RunOnWindows", "True")]
     public async Task TestIastXpathInjectionRequest()

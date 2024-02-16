@@ -13,6 +13,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using Datadog.Trace;
+using Datadog.Trace.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -461,6 +463,35 @@ namespace Samples.Security.AspNetCore5.Controllers
             Response.Cookies.Append("AllVulnerabilitiesCookieKey", "AllVulnerabilitiesCookieValue", cookieOptions);
             Response.Cookies.Append(".AspNetCore.Correlation.oidc.xxxxxxxxxxxxxxxxxxx", "ExcludedCookieVulnValue", cookieOptions);
             return Content("Sending AllVulnerabilitiesCookie");
+        }
+
+        [HttpGet("randomCustomSpan")]
+        [Route("randomCustomSpan")]
+        [Trace(OperationName = "test.customSpan", ResourceName = "Manual.weakrandom")]
+        public ActionResult randomCustomSpan()
+        {
+            string result = string.Empty;
+            try
+            {
+                using (var parentScope =
+                       Tracer.Instance.StartActive("custom.weakrandom"))
+                {
+                    parentScope.Span.ResourceName = "Resource.weakrandom";
+                    using (var childScope =
+                           Tracer.Instance.StartActive("custom.weakrandom.child"))
+                    {
+                        // Nest using statements around the code to trace
+                        childScope.Span.ResourceName = "CustomSpan for test";
+                    }
+                }
+            }
+            catch
+            {
+                result = "Error in request.";
+            }
+
+            result = new Random().Next().ToString();
+            return Content(result, "text/html");
         }
 
         [HttpGet("SSRF")]

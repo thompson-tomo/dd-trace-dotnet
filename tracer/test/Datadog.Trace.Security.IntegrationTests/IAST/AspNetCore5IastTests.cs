@@ -34,6 +34,7 @@ public abstract class AspNetCore5IastTests50PctSamplingIastEnabled : AspNetCore5
         EnableIast(IastEnabled);
         EnableEvidenceRedaction(RedactionEnabled);
         DisableObfuscationQueryString();
+        SetEnvironmentVariable("DD_TRACE_DEBUG", "1");
         SetEnvironmentVariable(ConfigurationKeys.Iast.IsIastDeduplicationEnabled, IsIastDeduplicationEnabled?.ToString() ?? string.Empty);
         SetEnvironmentVariable(ConfigurationKeys.Iast.VulnerabilitiesPerRequest, VulnerabilitiesPerRequest?.ToString() ?? string.Empty);
         SetEnvironmentVariable(ConfigurationKeys.Iast.RequestSampling, SamplingRate?.ToString() ?? string.Empty);
@@ -261,6 +262,25 @@ public class AspNetCore5IastTestsFullSamplingIastEnabled : AspNetCore5IastTestsF
     {
         var filename = "Iast.StackTraceLeak.AspNetCore5";
         var url = "/Iast/StackTraceLeak";
+        IncludeAllHttpSpans = true;
+        await TryStartApp();
+        var agent = Fixture.Agent;
+        var spans = await SendRequestsAsync(agent, [url]);
+
+        var settings = VerifyHelper.GetSpanVerifierSettings();
+        settings.AddIastScrubbing();
+        await VerifyHelper.VerifySpans(spans, settings)
+                          .UseFileName(filename)
+                          .DisableRequireUniquePrefix();
+    }
+
+    [Fact]
+    [Trait("Category", "ArmUnsupported")]
+    [Trait("RunOnWindows", "True")]
+    public async Task TestCustomInstrumentation()
+    {
+        var filename = "Iast.CustomInstrumentation.AspNetCore5";
+        var url = "/Iast/randomCustomSpan";
         IncludeAllHttpSpans = true;
         await TryStartApp();
         var agent = Fixture.Agent;

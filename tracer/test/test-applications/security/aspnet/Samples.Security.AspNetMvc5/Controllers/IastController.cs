@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Web.Mvc;
 using System.Data.SQLite;
 using System;
+using Datadog.Trace;
+using Datadog.Trace.Annotations;
 using Samples.Security.Data;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -432,6 +434,34 @@ namespace Samples.Security.AspNetCore5.Controllers
                 result = "Error in request.";
             }
 
+            return Content(result, "text/html");
+        }
+
+        [Route("randomCustomSpan")]
+        [Trace(OperationName = "test.customSpan", ResourceName = "Manual.weakrandom")]
+        public ActionResult randomCustomSpan()
+        {
+            string result = string.Empty;
+            try
+            {
+                using (var parentScope =
+                       Tracer.Instance.StartActive("custom.weakrandom"))
+                {
+                    parentScope.Span.ResourceName = "Resource.weakrandom";
+                    using (var childScope =
+                           Tracer.Instance.StartActive("custom.weakrandom.child"))
+                    {
+                        // Nest using statements around the code to trace
+                        childScope.Span.ResourceName = "CustomSpan for test";
+                    }
+                }
+            }
+            catch
+            {
+                result = "Error in request.";
+            }
+
+            result = new Random().Next().ToString();
             return Content(result, "text/html");
         }
 

@@ -36,6 +36,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Datadog.Trace.Annotations\Datadog.Trace.Annotations.csproj" />
     <ProjectReference Include="..\..\..\..\src\Datadog.Trace\Datadog.Trace.csproj" />
   </ItemGroup>
 </Project>

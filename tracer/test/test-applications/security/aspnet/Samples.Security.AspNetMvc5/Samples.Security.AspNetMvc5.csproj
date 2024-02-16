@@ -216,6 +216,10 @@
     <Content Include="Views\User\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\src\Datadog.Trace.Annotations\Datadog.Trace.Annotations.csproj">
+      <Project>{4067eaf6-28c5-4b04-9c8a-80720c0541e6}</Project>
+      <Name>Datadog.Trace.Annotations</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\..\src\Datadog.Trace\Datadog.Trace.csproj">
       <Project>{5dfdf781-f24c-45b1-82ef-9125875a80a4}</Project>
       <Name>Datadog.Trace</Name>
