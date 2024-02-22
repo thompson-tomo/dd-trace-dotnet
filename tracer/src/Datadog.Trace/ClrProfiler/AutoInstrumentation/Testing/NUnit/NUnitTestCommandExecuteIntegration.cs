@@ -73,18 +73,18 @@ public static class NUnitTestCommandExecuteIntegration
             case "NUnit.Framework.Internal.Commands.EmptyTestCommand":
                 return CallTargetState.GetDefault();
             case "NUnit.Framework.Internal.Commands.SkipCommand":
-                if (NUnitIntegration.CreateTest(executionContext.CurrentTest) is { } test)
+                if (NUnitIntegration.CreateTest((ITestExecutionContext)null!, executionContext.CurrentTest) is { } test)
                 {
                     test.Close(Ci.TestStatus.Skip, TimeSpan.Zero);
                 }
 
                 return CallTargetState.GetDefault();
             case "NUnit.Framework.Internal.Commands.TestMethodCommand":
-                return new CallTargetState(null, NUnitIntegration.CreateTest(executionContext.CurrentTest));
+                return new CallTargetState(null, NUnitIntegration.CreateTest(executionContext, executionContext.CurrentTest));
             default:
                 if (executionContext.CurrentTest.Method is not null && !string.IsNullOrEmpty(executionContext.CurrentTest.MethodName))
                 {
-                    return new CallTargetState(null, NUnitIntegration.CreateTest(executionContext.CurrentTest));
+                    return new CallTargetState(null, NUnitIntegration.CreateTest(executionContext, executionContext.CurrentTest));
                 }
 
                 break;

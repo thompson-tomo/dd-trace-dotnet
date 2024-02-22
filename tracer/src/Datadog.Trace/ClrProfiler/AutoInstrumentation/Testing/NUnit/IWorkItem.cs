@@ -22,6 +22,11 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Testing.NUnit
         /// Gets the test result
         /// </summary>
         ITestResult Result { get; }
+
+        /// <summary>
+        /// Gets the execution context
+        /// </summary>
+        ITestExecutionContext Context { get; }
     }
 
     internal interface INUnitTestAssemblyRunner

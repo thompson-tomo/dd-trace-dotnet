@@ -47,7 +47,7 @@ public static class NUnitWorkItemWorkItemCompleteIntegration
                 suite.Close();
                 break;
             case "TestMethod" when instance.Result.ResultState.Status == TestStatus.Failed && item.Method?.MethodInfo is not null:
-                if (NUnitIntegration.CreateTest(item) is { } test)
+                if (NUnitIntegration.CreateTest(instance.Context, item) is { } test)
                 {
                     test.SetErrorInfo("Exception", instance.Result.Message, instance.Result.StackTrace);
                     test.Close(Ci.TestStatus.Fail, TimeSpan.Zero);

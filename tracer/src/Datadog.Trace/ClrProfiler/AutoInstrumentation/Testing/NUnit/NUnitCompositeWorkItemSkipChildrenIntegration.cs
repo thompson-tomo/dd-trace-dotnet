@@ -98,7 +98,7 @@ public class NUnitCompositeWorkItemSkipChildrenIntegration
                 // In case the TestSuite is a ParameterizedMethodSuite instance
                 foreach (var item in testSuite.Tests)
                 {
-                    if (item.TryDuckCast<ITest>(out var iTestItem) && NUnitIntegration.CreateTest(iTestItem) is { } test)
+                    if (item.TryDuckCast<ITest>(out var iTestItem) && NUnitIntegration.CreateTest((ITestExecutionContext)null!, iTestItem) is { } test)
                     {
                         test.Close(Ci.TestStatus.Skip, TimeSpan.Zero, skipMessage);
                     }

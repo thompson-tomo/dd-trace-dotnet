@@ -22,7 +22,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Testing.NUnit
 
         private static readonly ConditionalWeakTable<object, object> ModulesItems = new();
         private static readonly ConditionalWeakTable<object, object> SuiteItems = new();
-        private static readonly ConditionalWeakTable<object, object> ExistingTestCreation = new();
+        private static readonly ConditionalWeakTable<Tuple<object?, object?>, StrongBox<int>> ExistingTestCreation = new();
 
         internal const string IntegrationName = nameof(Configuration.IntegrationId.NUnit);
         internal const IntegrationId IntegrationId = Configuration.IntegrationId.NUnit;
@@ -31,11 +31,20 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Testing.NUnit
 
         internal static bool IsEnabled => CIVisibility.IsRunning && Tracer.Instance.Settings.IsIntegrationEnabled(IntegrationId);
 
-        internal static Test? CreateTest(ITest currentTest)
+        internal static Test? CreateTest<TContext>(TContext currentContext, ITest? currentTest = null)
+            where TContext : ITestExecutionContext
         {
-            if (ExistingTestCreation.TryGetValue(currentTest.Instance!, out _))
+            currentTest ??= currentContext.CurrentTest;
+
+            var etcKey = Tuple.Create(currentContext.Instance, currentTest.Instance);
+            if (ExistingTestCreation.TryGetValue(etcKey, out var valueBox))
             {
-                return null;
+                if (currentContext.Instance is null || valueBox.Value == currentContext.CurrentRepeatCount)
+                {
+                    return null;
+                }
+
+                valueBox.Value = currentContext.CurrentRepeatCount;
             }
 
             var testMethod = currentTest.Method?.MethodInfo;
@@ -54,7 +63,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Testing.NUnit
             }
 
             var test = suite.InternalCreateTest(testMethod.Name);
-            ExistingTestCreation.GetOrCreateValue(currentTest.Instance!);
+            ExistingTestCreation.GetOrCreateValue(etcKey).Value = currentContext?.CurrentRepeatCount ?? 0;
             string? skipReason = null;
 
             // Get test parameters
@@ -324,7 +333,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Testing.NUnit
 
         internal static void WriteSkip(ITest item, string skipMessage)
         {
-            if (item.Method?.MethodInfo is not null && CreateTest(item) is { } test)
+            if (item.Method?.MethodInfo is not null && CreateTest((ITestExecutionContext)null!, item) is { } test)
             {
                 test.Close(Ci.TestStatus.Skip, TimeSpan.Zero, skipMessage);
             }
@@ -348,7 +357,7 @@ namespace Datadog.Trace.ClrProfiler.AutoInstrumentation.Testing.NUnit
 
         private static void WriteSetUpOrTearDownError(ITestResult testResult, ITest item, string exceptionType)
         {
-            if (item.Method?.MethodInfo is not null && CreateTest(item) is { } test)
+            if (item.Method?.MethodInfo is not null && CreateTest((ITestExecutionContext)null!, item) is { } test)
             {
                 test.SetErrorInfo(exceptionType, testResult.Message, testResult.StackTrace);
                 test.Close(Ci.TestStatus.Fail, TimeSpan.Zero);
