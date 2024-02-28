@@ -36,6 +36,7 @@
 #include "ThreadLifetimeProvider.h"
 #include "shared/src/native-src/string.h"
 #include "IEtwEventsManager.h"
+#include "ISsiManager.h"
 
 #include <atomic>
 #include <memory>
@@ -48,7 +49,6 @@ class IManagedThreadList;
 class IStackSamplerLoopManager;
 class IConfiguration;
 class IExporter;
-
 
 #ifdef LINUX
 class SystemCallsShield;
@@ -207,7 +207,7 @@ public:
     IStackSamplerLoopManager* GetStackSamplerLoopManager() { return _pStackSamplerLoopManager; }
     IApplicationStore* GetApplicationStore() { return _pApplicationStore; }
     IExporter* GetExporter() { return _pExporter.get(); }
-    void TraceContextHasBeenSet() { _pProfilerTelemetry->OnSpanCreated(); }
+    void TraceContextHasBeenSet() { _pSsiManager->OnSpanCreated(); }
 
 private :
     static CorProfilerCallback* _this;
@@ -266,7 +266,12 @@ private :
     std::unique_ptr<IEtwEventsManager> _pEtwEventsManager;
     bool _isETWStarted = false;
 
+    // today, only the SSI manager is using telemetry
+    // but we could have more telemetry in the future
+    // so keep it at the CorProfilerCallback level
+    // instead of hidding it inside the SSI manager
     std::unique_ptr<IProfilerTelemetry> _pProfilerTelemetry = nullptr;
+    std::unique_ptr<ISsiManager> _pSsiManager = nullptr;
 
 private:
     static void ConfigureDebugLog();
