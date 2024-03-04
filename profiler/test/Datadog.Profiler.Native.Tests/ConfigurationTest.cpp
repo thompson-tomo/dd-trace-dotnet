@@ -905,3 +905,34 @@ TEST(ConfigurationTest, CheckSsiIsNotActivatedIfEnvVarIsEmpty)
     auto expectedValue = false;
     ASSERT_THAT(configuration.IsSsiActivated(), expectedValue);
 }
+
+TEST(ConfigurationTest, CheckProfilerIsDisabledByDefault)
+{
+    auto configuration = Configuration{};
+    auto expectedValue = false;
+    ASSERT_THAT(configuration.IsProfilerEnabled(), expectedValue);
+}
+
+TEST(ConfigurationTest, CheckProfilerIsDisabledIfEnvVarIsEmpty)
+{
+    EnvironmentHelper::EnvironmentVariable ar(EnvironmentVariables::ProfilerEnabled, WStr(""));
+    auto configuration = Configuration{};
+    auto expectedValue = false;
+    ASSERT_THAT(configuration.IsProfilerEnabled(), expectedValue);
+}
+
+TEST(ConfigurationTest, CheckProfilerIsDisabledIfEnvVarIsNotTrue)
+{
+    EnvironmentHelper::EnvironmentVariable ar(EnvironmentVariables::ProfilerEnabled, WStr("0"));
+    auto configuration = Configuration{};
+    auto expectedValue = false;
+    ASSERT_THAT(configuration.IsProfilerEnabled(), expectedValue);
+}
+
+TEST(ConfigurationTest, CheckProfilerIsEnabledIfEnvVarIsTrue)
+{
+    EnvironmentHelper::EnvironmentVariable ar(EnvironmentVariables::ProfilerEnabled, WStr("1"));
+    auto configuration = Configuration{};
+    auto expectedValue = true;
+    ASSERT_THAT(configuration.IsProfilerEnabled(), expectedValue);
+}

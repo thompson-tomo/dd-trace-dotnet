@@ -69,8 +69,8 @@ public:
     bool IsEtwEnabled() const override;
     bool IsSsiDeployed() const override;
     bool IsSsiActivated() const override;
-
-
+    bool IsProfilerEnabled() const override;
+    int32_t SsiShortLivedThreshold() const override;
 
 private:
     static tags ExtractUserTags();
@@ -157,4 +157,6 @@ private:
     bool _isEtwEnabled;
     bool _isSsiDeployed;
     bool _isSsiActivated;
+    bool _isProfilerEnabled;
+    int32_t _ssiShortLivedThreshold;
 };
