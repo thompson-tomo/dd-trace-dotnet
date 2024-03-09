@@ -68,7 +68,7 @@ public:
     std::uint64_t GetCIVisibilitySpanId() const override;
     bool IsEtwEnabled() const override;
     bool IsSsiDeployed() const override;
-    bool IsSsiActivated() const override;
+    bool IsSsiEnabled() const override;
     bool IsProfilerEnabled() const override;
     int32_t SsiShortLivedThreshold() const override;
 
@@ -156,7 +156,7 @@ private:
     std::uint64_t _internalCIVisibilitySpanId;
     bool _isEtwEnabled;
     bool _isSsiDeployed;
-    bool _isSsiActivated;
+    bool _isSsiEnabled;
     bool _isProfilerEnabled;
     int32_t _ssiShortLivedThreshold;
 };

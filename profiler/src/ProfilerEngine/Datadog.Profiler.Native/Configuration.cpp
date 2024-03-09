@@ -89,7 +89,7 @@ Configuration::Configuration()
     }
 
     _isEtwEnabled = GetEnvironmentValue(EnvironmentVariables::EtwEnabled, false);
-    ExtractSsiState(_isSsiDeployed, _isSsiActivated);
+    ExtractSsiState(_isSsiDeployed, _isSsiEnabled);
     _isProfilerEnabled = GetEnvironmentValue(EnvironmentVariables::ProfilerEnabled, false);
     _ssiShortLivedThreshold = GetEnvironmentValue(EnvironmentVariables::SsiShortLivedThreshold, 30);
 }
@@ -544,9 +544,9 @@ bool Configuration::IsSsiDeployed() const
     return _isSsiDeployed;
 }
 
-bool Configuration::IsSsiActivated() const
+bool Configuration::IsSsiEnabled() const
 {
-    return _isSsiActivated;
+    return _isSsiEnabled;
 }
 
 bool Configuration::IsProfilerEnabled() const
@@ -651,6 +651,6 @@ void Configuration::ExtractSsiState(bool& ssiDeployed, bool& ssiEnabled)
         return;
     }
 
-    auto pos = r.find(WStr("profiling"));
+    auto pos = r.find(WStr("profiler"));
     ssiEnabled = (pos != shared::WSTRING::npos);
 }
