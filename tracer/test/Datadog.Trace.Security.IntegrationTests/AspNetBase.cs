@@ -323,15 +323,7 @@ namespace Datadog.Trace.Security.IntegrationTests
             return spans.ToImmutableList();
         }
 
-        private async Task SendRequestsAsyncNoWaitForSpans(string url, string body, int numberOfAttacks, string contentType = null, string userAgent = null)
-        {
-            for (var x = 0; x < numberOfAttacks; x++)
-            {
-                await SubmitRequest(url, body, contentType, userAgent);
-            }
-        }
-
-        private IImmutableList<MockSpan> WaitForSpans(MockTracerAgent agent, int expectedSpans, string phase, DateTime minDateTime, string url)
+        protected IImmutableList<MockSpan> WaitForSpans(MockTracerAgent agent, int expectedSpans, string phase, DateTime minDateTime, string url)
         {
             agent.SpanFilters.Clear();
 
@@ -347,6 +339,14 @@ namespace Datadog.Trace.Security.IntegrationTests
             }
 
             return spans;
+        }
+
+        private async Task SendRequestsAsyncNoWaitForSpans(string url, string body, int numberOfAttacks, string contentType = null, string userAgent = null)
+        {
+            for (var x = 0; x < numberOfAttacks; x++)
+            {
+                await SubmitRequest(url, body, contentType, userAgent);
+            }
         }
 
         private void SortJToken(JToken result)
