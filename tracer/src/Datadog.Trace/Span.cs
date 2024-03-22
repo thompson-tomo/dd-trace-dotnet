@@ -4,6 +4,7 @@
 // </copyright>
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -122,6 +123,8 @@ namespace Datadog.Trace
         internal ITags Tags { get; set; }
 
         internal SpanContext Context { get; }
+
+        internal List<SpanLink> SpanLinkList { get; set; }
 
         internal DateTimeOffset StartTime { get; private set; }
 
@@ -528,6 +531,13 @@ namespace Datadog.Trace
             Log.Debug(
                 "Span closed: [s_id: {SpanId}, p_id: {ParentId}, t_id: {TraceId}] for (Service: {ServiceName}, Resource: {ResourceName}, Operation: {OperationName}, Tags: [{Tags}])\nDetails:{ToString}",
                 new object[] { Context.RawSpanId, Context.ParentIdInternal, Context.RawTraceId, ServiceName, ResourceName, OperationName, Tags, ToString() });
+        }
+
+        internal void AddSpanLink(Span spanLinkToAdd)
+        {
+            SpanLinkList ??= new List<SpanLink>();
+            var spanLink = new SpanLink(spanLinkToAdd.TraceId128, spanLinkToAdd.SpanId);
+            SpanLinkList.Add(spanLink);
         }
     }
 }
