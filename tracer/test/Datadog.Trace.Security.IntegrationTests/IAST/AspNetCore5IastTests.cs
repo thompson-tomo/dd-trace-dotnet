@@ -406,6 +406,8 @@ public class AspNetCore5IastTestsFullSamplingRedactionEnabled : AspNetCore5IastT
     }
 }
 
+[Collection(nameof(AspNetCore5IastTestsFullSampling))]
+[CollectionDefinition(nameof(AspNetCore5IastTestsFullSampling), DisableParallelization = true)]
 public abstract class AspNetCore5IastTestsFullSampling : AspNetCore5IastTests
 {
     public AspNetCore5IastTestsFullSampling(AspNetCoreTestFixture fixture, ITestOutputHelper outputHelper, bool enableIast, string testName, bool? isIastDeduplicationEnabled = null, int? vulnerabilitiesPerRequest = null, bool redactionEnabled = false)
@@ -943,6 +945,26 @@ public abstract class AspNetCore5IastTestsFullSampling : AspNetCore5IastTests
         await VerifyHelper.VerifySpans(spansFiltered, settings)
                             .UseFileName(filename)
                             .DisableRequireUniquePrefix();
+    }
+
+    [SkippableFact]
+    [Trait("RunOnWindows", "True")]
+    public async Task TestNHibernateSqlInjection()
+    {
+        var filename = "Iast.NHibernateSqlInjection.AspNetCore5." + (IastEnabled ? "IastEnabled" : "IastDisabled");
+        if (RedactionEnabled is true) { filename += ".RedactionEnabled"; }
+        var url = "/Iast/NHibernateQuery?username=TestUser";
+        IncludeAllHttpSpans = true;
+        await TryStartApp();
+        var agent = Fixture.Agent;
+        var spans = await SendRequestsAsync(agent, [url]);
+        var spansFiltered = spans.Where(x => x.Type == SpanTypes.Web).ToList();
+
+        var settings = VerifyHelper.GetSpanVerifierSettings();
+        settings.AddIastScrubbing();
+        await VerifyHelper.VerifySpans(spansFiltered, settings)
+                          .UseFileName(filename)
+                          .DisableRequireUniquePrefix();
     }
 }
 

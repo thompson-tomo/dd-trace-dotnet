@@ -70,6 +70,7 @@
       <type fullname="Microsoft.AspNetCore.Routing.IRoutingFeature" />
       <type fullname="Microsoft.AspNetCore.Routing.RouteData" />
       <type fullname="Microsoft.AspNetCore.Routing.RouteValueDictionary" />
+      <type fullname="Microsoft.AspNetCore.Routing.RoutingHttpContextExtensions" />
    </assembly>
    <assembly fullname="Microsoft.AspNetCore.Server.IIS" />
    <assembly fullname="Microsoft.AspNetCore.Server.Kestrel.Core" />
@@ -157,6 +158,7 @@
    </assembly>
    <assembly fullname="System.Collections.Specialized">
       <type fullname="System.Collections.Specialized.NameValueCollection" />
+      <type fullname="System.Collections.Specialized.OrderedDictionary" />
    </assembly>
    <assembly fullname="System.ComponentModel.Primitives">
       <type fullname="System.ComponentModel.BrowsableAttribute" />
@@ -586,6 +588,7 @@
       <type fullname="System.IntPtr" />
       <type fullname="System.InvalidCastException" />
       <type fullname="System.InvalidOperationException" />
+      <type fullname="System.InvalidProgramException" />
       <type fullname="System.IO.BinaryReader" />
       <type fullname="System.IO.BinaryWriter" />
       <type fullname="System.IO.Directory" />
@@ -813,6 +816,7 @@
       <type fullname="System.TypeCode" />
       <type fullname="System.TypedReference" />
       <type fullname="System.TypeInitializationException" />
+      <type fullname="System.TypeLoadException" />
       <type fullname="System.UInt16" />
       <type fullname="System.UInt32" />
       <type fullname="System.UInt64" />
@@ -899,6 +903,16 @@
       <type fullname="System.Runtime.InteropServices.Architecture" />
       <type fullname="System.Runtime.InteropServices.OSPlatform" />
       <type fullname="System.Runtime.InteropServices.RuntimeInformation" />
+   </assembly>
+   <assembly fullname="System.Runtime.Intrinsics">
+      <type fullname="System.Runtime.Intrinsics.Arm.AdvSimd" />
+      <type fullname="System.Runtime.Intrinsics.Vector128" />
+      <type fullname="System.Runtime.Intrinsics.Vector128`1" />
+      <type fullname="System.Runtime.Intrinsics.Vector256" />
+      <type fullname="System.Runtime.Intrinsics.Vector256`1" />
+      <type fullname="System.Runtime.Intrinsics.X86.Avx" />
+      <type fullname="System.Runtime.Intrinsics.X86.Avx2" />
+      <type fullname="System.Runtime.Intrinsics.X86.Sse2" />
    </assembly>
    <assembly fullname="System.Runtime.Loader">
       <type fullname="System.Runtime.Loader.AssemblyLoadContext" />

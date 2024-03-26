@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Datadog.Trace.Debugger.ExceptionAutoInstrumentation;
 using Datadog.Trace.ExtensionMethods;
 using Datadog.Trace.Logging;
 using Datadog.Trace.Sampling;
@@ -424,6 +425,11 @@ namespace Datadog.Trace
                     SetTag(Trace.Tags.ErrorMsg, exception.Message);
                     SetTag(Trace.Tags.ErrorType, exception.GetType().ToString());
                     SetTag(Trace.Tags.ErrorStack, exception.ToString());
+
+                    if (IsRootSpan)
+                    {
+                        ExceptionDebugging.Report(this, exception);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -464,6 +470,11 @@ namespace Datadog.Trace
             ResourceName ??= OperationName;
             if (Interlocked.CompareExchange(ref _isFinished, 1, 0) == 0)
             {
+                if (IsRootSpan)
+                {
+                    ExceptionDebugging.EndRequest();
+                }
+
                 Duration = duration;
                 if (Duration < TimeSpan.Zero)
                 {
@@ -513,6 +524,11 @@ namespace Datadog.Trace
         internal void SetDuration(TimeSpan duration)
         {
             Duration = duration;
+        }
+
+        internal void MarkSpanForExceptionDebugging()
+        {
+            ExceptionDebugging.BeginRequest();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
