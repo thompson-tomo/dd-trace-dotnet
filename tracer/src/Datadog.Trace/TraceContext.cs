@@ -96,11 +96,13 @@ namespace Datadog.Trace
 
         public string? Origin { get; set; }
 
-        public double? InitialSamplingRate { get; set; }
-
         public string? InitialSamplingMechanism { get; set; }
 
+        public double? InitialSamplingRate { get; set; }
+
         public double? TracesKeepRate { get; set; }
+
+        public double? LimitSamplingRate { get; set; }
 
         /// <summary>
         /// Gets or sets additional key/value pairs from upstream "tracestate" header that we will propagate downstream.

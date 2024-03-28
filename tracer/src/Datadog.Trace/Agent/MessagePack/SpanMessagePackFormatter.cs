@@ -67,7 +67,7 @@ namespace Datadog.Trace.Agent.MessagePack
 
         private readonly byte[] _ruleSamplingRateNameBytes = StringEncoding.UTF8.GetBytes(Metrics.SamplingRuleDecision);
 
-        private readonly byte[] _rateLimitNameBytes = StringEncoding.UTF8.GetBytes(Metrics.SamplingLimitDecision);
+        private readonly byte[] _limitSamplingRateNameBytes = StringEncoding.UTF8.GetBytes(Metrics.SamplingLimitDecision);
 
         private readonly byte[] _keepRateNameBytes = StringEncoding.UTF8.GetBytes(Metrics.TracesKeepRate);
 
@@ -544,6 +544,14 @@ namespace Datadog.Trace.Agent.MessagePack
                     count++;
                     offset += MessagePackBinary.WriteStringBytes(ref bytes, offset, tagNameBytes);
                     offset += MessagePackBinary.WriteDouble(ref bytes, offset, samplingRate);
+                }
+
+                // add limit sampling rate to local root span if available
+                if (model.TraceChunk.LimitSamplingRate is { } limitSamplingRate)
+                {
+                    count++;
+                    offset += MessagePackBinary.WriteStringBytes(ref bytes, offset, _limitSamplingRateNameBytes);
+                    offset += MessagePackBinary.WriteDouble(ref bytes, offset, limitSamplingRate);
                 }
 
                 // add rate limit to local root span if available

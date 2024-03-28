@@ -9,7 +9,5 @@ namespace Datadog.Trace.Tagging
 {
     internal partial class CommonTags : TagsList
     {
-        [Metric(Trace.Metrics.SamplingLimitDecision)]
-        public double? SamplingLimitDecision { get; set; }
     }
 }

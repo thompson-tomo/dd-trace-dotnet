@@ -40,7 +40,6 @@ internal partial class TestSpanTags : TestSuiteSpanTags
         OSArchitecture = suiteTags.OSArchitecture;
         OSPlatform = suiteTags.OSPlatform;
         OSVersion = suiteTags.OSVersion;
-        SamplingLimitDecision = suiteTags.SamplingLimitDecision;
         CIJobName = suiteTags.CIJobName;
         CIJobUrl = suiteTags.CIJobUrl;
         CIPipelineId = suiteTags.CIPipelineId;
