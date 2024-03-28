@@ -28,7 +28,7 @@ namespace Datadog.Trace.Sampling
         private int _previousWindowChecks = 0;
         private int _previousWindowAllowed = 0;
 
-        public RateLimiter(int? maxTracesPerInterval)
+        protected RateLimiter(int? maxTracesPerInterval)
         {
             _maxTracesPerInterval = maxTracesPerInterval ?? 100;
 
@@ -78,13 +78,13 @@ namespace Datadog.Trace.Sampling
             }
         }
 
-        public abstract void OnDisallowed(Span span, int count, int intervalMs, int maxTracesPerInterval);
+        protected abstract void OnDisallowed(Span span, int count, int intervalMs, int maxTracesPerInterval);
 
-        public virtual void OnRefresh(int intervalMs, int checksInLastInterval, int allowedInLastInterval)
+        protected virtual void OnRefresh(int intervalMs, int checksInLastInterval, int allowedInLastInterval)
         {
         }
 
-        public abstract void OnFinally(Span span);
+        protected abstract void OnFinally(Span span);
 
         public float GetEffectiveRate()
         {
