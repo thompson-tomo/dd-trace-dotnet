@@ -97,7 +97,7 @@ namespace Datadog.Trace.Sampling
                                _ => sample && _limiter.Allowed(span) ? SamplingPriorityValues.UserKeep : SamplingPriorityValues.UserReject
                            };
 
-            return new SamplingDecision(priority, mechanism);
+            return new SamplingDecision(priority, mechanism, rate);
         }
     }
 }
