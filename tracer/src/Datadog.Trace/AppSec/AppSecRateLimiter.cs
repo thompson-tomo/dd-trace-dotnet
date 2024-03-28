@@ -18,9 +18,5 @@ namespace Datadog.Trace.AppSec
         {
             span.SetMetric(Metrics.AppSecRateLimitDroppedTraces, count - maxTracesPerInterval);
         }
-
-        protected override void OnFinally(Span span)
-        {
-        }
     }
 }

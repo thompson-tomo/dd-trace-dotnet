@@ -32,9 +32,5 @@ namespace Datadog.Trace.Sampling
         {
             Log.Debug<ulong, int, int>("Dropping span id {SpanId} with count of {Count} for last {Interval}ms.", span.SpanId, count, intervalMs);
         }
-
-        protected override void OnFinally(Span span)
-        {
-        }
     }
 }

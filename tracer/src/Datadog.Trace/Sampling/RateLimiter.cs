@@ -84,7 +84,9 @@ namespace Datadog.Trace.Sampling
         {
         }
 
-        protected abstract void OnFinally(Span span);
+        protected virtual void OnFinally(Span span)
+        {
+        }
 
         public float GetEffectiveRate()
         {
