@@ -264,17 +264,15 @@ namespace Datadog.Trace
                 }
             }
 
-            if (settings.GlobalSamplingRateInternal != null)
+            if (settings.GlobalSamplingRateInternal is { } globalRate)
             {
-                var globalRate = (float)settings.GlobalSamplingRateInternal.Value;
-
-                if (globalRate < 0f || globalRate > 1f)
+                if (globalRate is < 0f or > 1f)
                 {
                     Log.Warning("{ConfigurationKey} configuration of {ConfigurationValue} is out of range", ConfigurationKeys.GlobalSamplingRate, settings.GlobalSamplingRateInternal);
                 }
                 else
                 {
-                    sampler.RegisterRule(new GlobalSamplingRule(globalRate));
+                    sampler.RegisterRule(new GlobalSamplingRule((float)globalRate));
                 }
             }
 

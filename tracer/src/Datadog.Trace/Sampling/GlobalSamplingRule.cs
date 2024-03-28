@@ -36,10 +36,10 @@ namespace Datadog.Trace.Sampling
         {
             Log.Debug("Using the global sampling rate {Rate} for trace {TraceId}", _globalRate, span.TraceId128);
 
-            if (span.Context.TraceContext is not null)
+            if (span.Context.TraceContext is { } trace)
             {
-                span.Context.TraceContext.InitialSamplingRate ??= _globalRate;
-                span.Context.TraceContext.InitialSamplingMechanism ??= SamplingMechanism;
+                trace.InitialSamplingRate ??= _globalRate;
+                trace.InitialSamplingMechanism ??= SamplingMechanism;
             }
 
             return _globalRate;
