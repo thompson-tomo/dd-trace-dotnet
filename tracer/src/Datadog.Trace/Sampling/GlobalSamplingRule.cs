@@ -4,6 +4,7 @@
 // </copyright>
 
 using Datadog.Trace.Logging;
+using Datadog.Trace.Vendors.Serilog.Events;
 
 namespace Datadog.Trace.Sampling
 {
@@ -31,12 +32,9 @@ namespace Datadog.Trace.Sampling
 
         public float GetSamplingRate(Span span)
         {
-            Log.Debug("Using the global sampling rate {Rate} for trace {TraceId}", _globalRate, span.TraceId128);
-
-            if (span.Context.TraceContext is { } trace)
+            if (Log.IsEnabled(LogEventLevel.Debug))
             {
-                trace.InitialSamplingRate ??= _globalRate;
-                trace.InitialSamplingMechanism ??= SamplingMechanism;
+                Log.Debug("Using the global sampling rate {Rate} for trace {TraceId}", _globalRate, span.Context.RawTraceId);
             }
 
             return _globalRate;

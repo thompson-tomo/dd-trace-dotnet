@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Datadog.Trace.Logging;
 using Datadog.Trace.Vendors.Newtonsoft.Json;
+using Datadog.Trace.Vendors.Serilog.Events;
 
 namespace Datadog.Trace.Sampling
 {
@@ -129,12 +130,9 @@ namespace Datadog.Trace.Sampling
 
         public float GetSamplingRate(Span span)
         {
-            Log.Debug("Using the sampling rate {Rate} from custom sampling rule for trace {TraceId}", _samplingRate, span.TraceId128);
-
-            if (span.Context.TraceContext is not null)
+            if (Log.IsEnabled(LogEventLevel.Debug))
             {
-                span.Context.TraceContext.InitialSamplingRate ??= _samplingRate;
-                span.Context.TraceContext.InitialSamplingMechanism ??= SamplingMechanism;
+                Log.Debug("Using custom sampling rule with rate {Rate} for trace {TraceId}", _samplingRate, span.Context.RawTraceId);
             }
 
             return _samplingRate;

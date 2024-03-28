@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using Datadog.Trace.Logging;
+using Datadog.Trace.Vendors.Serilog.Events;
 
 namespace Datadog.Trace.Sampling
 {
@@ -47,26 +48,28 @@ namespace Datadog.Trace.Sampling
 
                 if (_sampleRates.TryGetValue(key, out var sampleRate))
                 {
-                    Log.Debug("Using agent sampling rate {Rate} for trace {TraceId} after matching \"service:{Service},env:{Env}\".", sampleRate, span.TraceId128, service, env);
-                    SetSamplingAgentDecision(span, sampleRate, SamplingMechanism);
+                    if (Log.IsEnabled(LogEventLevel.Debug))
+                    {
+                        Log.Debug(
+                            "Using agent sampling rate {Rate} for trace {TraceId} after matching \"service:{Service},env:{Env}\".",
+                            sampleRate,
+                            span.Context.RawTraceId,
+                            service,
+                            env);
+                    }
+
                     return sampleRate;
                 }
             }
 
             var defaultRate = _defaultSamplingRate ?? 1;
 
-            Log.Debug("Using default agent sampling rate {Rate} for trace {TraceId}.", defaultRate, span.TraceId128);
-            SetSamplingAgentDecision(span, defaultRate, SamplingMechanism);
-            return defaultRate;
-
-            static void SetSamplingAgentDecision(Span span, float sampleRate, string mechanism)
+            if (Log.IsEnabled(LogEventLevel.Debug))
             {
-                if (span.Context.TraceContext is not null)
-                {
-                    span.Context.TraceContext.InitialSamplingRate ??= sampleRate;
-                    span.Context.TraceContext.InitialSamplingMechanism ??= mechanism;
-                }
+                Log.Debug("Using default agent sampling rate {Rate} for trace {TraceId}.", defaultRate, span.Context.RawTraceId);
             }
+
+            return defaultRate;
         }
 
         public void SetDefaultSampleRates(IReadOnlyDictionary<string, float> sampleRates)
