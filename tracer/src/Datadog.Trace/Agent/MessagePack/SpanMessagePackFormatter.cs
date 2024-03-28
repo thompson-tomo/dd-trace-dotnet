@@ -533,10 +533,10 @@ namespace Datadog.Trace.Agent.MessagePack
                 {
                     var tagNameBytes = model.TraceChunk.InitialSamplingMechanism switch
                     {
-                        // sampling rule or global sampling rate
-                        SamplingMechanism.TraceSamplingRule => _ruleSamplingRateNameBytes,
                         // agent sampling rate (matched) or default agent sampling rate (no match) or default fallback (1.0)
                         SamplingMechanism.AgentRate or SamplingMechanism.Default => _agentSamplingRateNameBytes,
+                        // sampling rule or global sampling rate
+                        SamplingMechanism.TraceSamplingRule => _ruleSamplingRateNameBytes,
                         // unknown sampling rate source
                         _ => null
                     };
