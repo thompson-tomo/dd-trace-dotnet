@@ -266,7 +266,7 @@ namespace Datadog.Trace
             {
                 // report sampling mechanism only if decision is to keep the trace.
                 // report only the original sampling mechanism, do not override.
-                InitialSamplingMechanism = mechanism;
+                InitialSamplingMechanism ??= mechanism;
                 Tags.TryAddTag(Trace.Tags.Propagated.DecisionMaker, mechanism);
             }
             else if (priority <= 0)
