@@ -22,7 +22,7 @@ template <class T>
 class LinkedList
 {
 public:
-    LinkedList(pmr::memory_resource* allocator = pmr::get_default_resource()) noexcept :
+    LinkedList(shared::pmr::memory_resource* allocator = shared::pmr::get_default_resource()) noexcept :
         _head{nullptr}, _tail{&_head}, _nbElements{0}, _allocator{allocator}
     {
     }
@@ -197,7 +197,7 @@ private:
     struct NodeGuard
     {
     public:
-        constexpr explicit NodeGuard(pmr::memory_resource* mr) :
+        constexpr explicit NodeGuard(shared::pmr::memory_resource* mr) :
             _mr{mr}, _Node{nullptr}
         {
         }
@@ -223,7 +223,7 @@ private:
             return std::exchange(_Node, nullptr);
         }
 
-        pmr::memory_resource* _mr;
+        shared::pmr::memory_resource* _mr;
         Node* _Node;
     };
 
@@ -246,5 +246,5 @@ private:
     Node** _tail;
     std::size_t _nbElements;
 
-    pmr::memory_resource* _allocator;
+    shared::pmr::memory_resource* _allocator;
 };
