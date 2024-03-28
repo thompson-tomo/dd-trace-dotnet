@@ -69,6 +69,8 @@ namespace Datadog.Trace.Agent.MessagePack
 
         private readonly byte[] _rateLimitNameBytes = StringEncoding.UTF8.GetBytes(Metrics.SamplingLimitDecision);
 
+        private readonly byte[] _keepRateNameBytes = StringEncoding.UTF8.GetBytes(Metrics.TracesKeepRate);
+
         private readonly byte[] _processIdNameBytes = StringEncoding.UTF8.GetBytes(Metrics.ProcessId);
 
         // Azure App Service tag names and values
@@ -526,7 +528,7 @@ namespace Datadog.Trace.Agent.MessagePack
                     offset += MessagePackBinary.WriteDouble(ref bytes, offset, processId);
                 }
 
-                // add sampling rate to local root span if available
+                // add agent or rule sampling rate to local root span if available
                 if (model.TraceChunk.InitialSamplingRate is { } samplingRate)
                 {
                     var tagNameBytes = model.TraceChunk.InitialSamplingMechanism switch
@@ -542,6 +544,14 @@ namespace Datadog.Trace.Agent.MessagePack
                     count++;
                     offset += MessagePackBinary.WriteStringBytes(ref bytes, offset, tagNameBytes);
                     offset += MessagePackBinary.WriteDouble(ref bytes, offset, samplingRate);
+                }
+
+                // add rate limit to local root span if available
+                if (model.TraceChunk.TracesKeepRate is { } keepRate)
+                {
+                    count++;
+                    offset += MessagePackBinary.WriteStringBytes(ref bytes, offset, _keepRateNameBytes);
+                    offset += MessagePackBinary.WriteDouble(ref bytes, offset, keepRate);
                 }
             }
 

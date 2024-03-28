@@ -16,15 +16,12 @@ namespace Datadog.Trace.Tagging
     {
         // SamplingLimitDecisionBytes = MessagePack.Serialize("_dd.limit_psr");
         private static ReadOnlySpan<byte> SamplingLimitDecisionBytes => new byte[] { 173, 95, 100, 100, 46, 108, 105, 109, 105, 116, 95, 112, 115, 114 };
-        // TracesKeepRateBytes = MessagePack.Serialize("_dd.tracer_kr");
-        private static ReadOnlySpan<byte> TracesKeepRateBytes => new byte[] { 173, 95, 100, 100, 46, 116, 114, 97, 99, 101, 114, 95, 107, 114 };
 
         public override double? GetMetric(string key)
         {
             return key switch
             {
                 "_dd.limit_psr" => SamplingLimitDecision,
-                "_dd.tracer_kr" => TracesKeepRate,
                 _ => base.GetMetric(key),
             };
         }
@@ -35,9 +32,6 @@ namespace Datadog.Trace.Tagging
             {
                 case "_dd.limit_psr": 
                     SamplingLimitDecision = value;
-                    break;
-                case "_dd.tracer_kr": 
-                    TracesKeepRate = value;
                     break;
                 default: 
                     base.SetMetric(key, value);
@@ -52,11 +46,6 @@ namespace Datadog.Trace.Tagging
                 processor.Process(new TagItem<double>("_dd.limit_psr", SamplingLimitDecision.Value, SamplingLimitDecisionBytes));
             }
 
-            if (TracesKeepRate is not null)
-            {
-                processor.Process(new TagItem<double>("_dd.tracer_kr", TracesKeepRate.Value, TracesKeepRateBytes));
-            }
-
             base.EnumerateMetrics(ref processor);
         }
 
@@ -66,13 +55,6 @@ namespace Datadog.Trace.Tagging
             {
                 sb.Append("_dd.limit_psr (metric):")
                   .Append(SamplingLimitDecision.Value)
-                  .Append(',');
-            }
-
-            if (TracesKeepRate is not null)
-            {
-                sb.Append("_dd.tracer_kr (metric):")
-                  .Append(TracesKeepRate.Value)
                   .Append(',');
             }
 

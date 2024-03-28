@@ -37,6 +37,8 @@ internal readonly struct TraceChunkModel
 
     public readonly string? InitialSamplingMechanism = null;
 
+    public readonly double? TracesKeepRate = null;
+
     public readonly string? Environment = null;
 
     public readonly string? ServiceVersion = null;
@@ -85,6 +87,7 @@ internal readonly struct TraceChunkModel
             SamplingPriority ??= traceContext.SamplingPriority;
             InitialSamplingRate = traceContext.InitialSamplingRate;
             InitialSamplingMechanism = traceContext.InitialSamplingMechanism;
+            TracesKeepRate = traceContext.TracesKeepRate;
             Environment = traceContext.Environment;
             ServiceVersion = traceContext.ServiceVersion;
             Origin = traceContext.Origin;

@@ -100,6 +100,8 @@ namespace Datadog.Trace
 
         public string? InitialSamplingMechanism { get; set; }
 
+        public double? TracesKeepRate { get; set; }
+
         /// <summary>
         /// Gets or sets additional key/value pairs from upstream "tracestate" header that we will propagate downstream.
         /// This value will _not_ include the "dd" key, which is parsed out into other individual values
