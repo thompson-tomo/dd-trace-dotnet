@@ -537,13 +537,16 @@ namespace Datadog.Trace.Agent.MessagePack
                         SamplingMechanism.TraceSamplingRule => _ruleSamplingRateNameBytes,
                         // agent sampling rate (matched) or default agent sampling rate (no match) or default fallback (1.0)
                         SamplingMechanism.AgentRate or SamplingMechanism.Default => _agentSamplingRateNameBytes,
-                        // no sampling rate was used
+                        // unknown sampling rate source
                         _ => null
                     };
 
-                    count++;
-                    offset += MessagePackBinary.WriteStringBytes(ref bytes, offset, tagNameBytes);
-                    offset += MessagePackBinary.WriteDouble(ref bytes, offset, samplingRate);
+                    if (tagNameBytes is not null)
+                    {
+                        count++;
+                        offset += MessagePackBinary.WriteStringBytes(ref bytes, offset, tagNameBytes);
+                        offset += MessagePackBinary.WriteDouble(ref bytes, offset, samplingRate);
+                    }
                 }
 
                 // add limit sampling rate to local root span if available
