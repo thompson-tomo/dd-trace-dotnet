@@ -89,7 +89,7 @@ internal readonly struct TraceChunkModel
             SamplingPriority ??= traceContext.SamplingPriority;
             InitialSamplingRate = traceContext.InitialSamplingRate;
             InitialSamplingMechanism = traceContext.InitialSamplingMechanism;
-            LimitSamplingRate = traceContext.LimitSamplingRate;
+            LimitSamplingRate = traceContext.LimiterSamplingRate;
             TracesKeepRate = traceContext.TracesKeepRate;
             Environment = traceContext.Environment;
             ServiceVersion = traceContext.ServiceVersion;

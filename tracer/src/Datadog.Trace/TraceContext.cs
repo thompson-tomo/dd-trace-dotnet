@@ -102,7 +102,7 @@ namespace Datadog.Trace
 
         public double? TracesKeepRate { get; set; }
 
-        public double? LimitSamplingRate { get; set; }
+        public double? LimiterSamplingRate { get; set; }
 
         /// <summary>
         /// Gets or sets additional key/value pairs from upstream "tracestate" header that we will propagate downstream.
@@ -246,13 +246,14 @@ namespace Datadog.Trace
 
         public void SetSamplingPriority(SamplingDecision decision, bool notifyDistributedTracer = true)
         {
-            SetSamplingPriority(decision.Priority, decision.Mechanism, decision.Rate, notifyDistributedTracer);
+            SetSamplingPriority(decision.Priority, decision.Mechanism, decision.Rate, decision.LimiterRate, notifyDistributedTracer);
         }
 
         public void SetSamplingPriority(
             int? priority,
             string? mechanism = null,
-            float? rate = null,
+            double? rate = null,
+            double? limiterRate = null,
             bool notifyDistributedTracer = true)
         {
             if (priority == null)
@@ -263,8 +264,9 @@ namespace Datadog.Trace
             // priority (keep/drop) can change (manually, ASM, etc)
             _samplingPriority = priority;
 
-            // report only the original sampling rate, do not override
+            // report only the original rates, do not override
             InitialSamplingRate ??= rate;
+            LimiterSamplingRate ??= limiterRate;
 
             if (priority > 0 && mechanism != null)
             {

@@ -17,7 +17,8 @@ internal readonly struct SamplingDecision
     public static SamplingDecision Default = new(
         priority: SamplingPriorityValues.AutoKeep,
         mechanism: SamplingMechanism.Default,
-        rate: null);
+        rate: null,
+        limiterRate: null);
 
     public readonly int Priority;
 
@@ -25,17 +26,21 @@ internal readonly struct SamplingDecision
 
     public readonly float? Rate;
 
-    public SamplingDecision(int priority, string? mechanism, float? rate)
+    public readonly float? LimiterRate;
+
+    public SamplingDecision(int priority, string? mechanism, float? rate, float? limiterRate)
     {
         Priority = priority;
         Mechanism = mechanism;
         Rate = rate;
+        LimiterRate = limiterRate;
     }
 
-    public void Deconstruct(out int priority, out string? mechanism, out float? rate)
+    public void Deconstruct(out int priority, out string? mechanism, out float? rate, out float? limiterRate)
     {
         priority = Priority;
         mechanism = Mechanism;
         rate = Rate;
+        limiterRate = LimiterRate;
     }
 }
