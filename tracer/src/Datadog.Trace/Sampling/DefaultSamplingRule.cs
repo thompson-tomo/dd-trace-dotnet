@@ -34,10 +34,7 @@ namespace Datadog.Trace.Sampling
         /// </summary>
         public int Priority => int.MinValue;
 
-        public bool IsMatch(Span span)
-        {
-            return true;
-        }
+        public bool IsMatch(Span span) => true;
 
         public float GetSamplingRate(Span span)
         {
@@ -126,8 +123,8 @@ namespace Datadog.Trace.Sampling
 
         private readonly struct SampleRateKey : IEquatable<SampleRateKey>
         {
-            private static readonly char[] PartSeparator = new[] { ',' };
-            private static readonly char[] ValueSeparator = new[] { ':' };
+            private static readonly char[] PartSeparator = [','];
+            private static readonly char[] ValueSeparator = [':'];
 
             private readonly string _service;
             private readonly string _env;

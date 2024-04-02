@@ -27,10 +27,7 @@ namespace Datadog.Trace.Sampling
 
         public int SamplingMechanism => Datadog.Trace.Sampling.SamplingMechanism.TraceSamplingRule;
 
-        public bool IsMatch(Span span)
-        {
-            return true;
-        }
+        public bool IsMatch(Span span) => true;
 
         public float GetSamplingRate(Span span)
         {
