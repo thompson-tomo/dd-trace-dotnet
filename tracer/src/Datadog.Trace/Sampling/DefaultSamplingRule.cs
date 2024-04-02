@@ -46,7 +46,7 @@ namespace Datadog.Trace.Sampling
                 // either we don't have sampling rate from the agent yet (cold start),
                 // or the only rate we received is for "service:,env:", which is not added to _sampleRates
                 defaultRate = _defaultSamplingRate ?? 1;
-                SetSamplingAgentDecision(span, defaultRate); // Keep it to ease investigations
+                SetSamplingAgentDecisionTag(span, defaultRate); // Keep it to ease investigations
                 return defaultRate;
             }
 
@@ -57,7 +57,7 @@ namespace Datadog.Trace.Sampling
 
             if (_sampleRates.TryGetValue(key, out var sampleRate))
             {
-                SetSamplingAgentDecision(span, sampleRate);
+                SetSamplingAgentDecisionTag(span, sampleRate);
                 return sampleRate;
             }
 
@@ -67,10 +67,10 @@ namespace Datadog.Trace.Sampling
             }
 
             defaultRate = _defaultSamplingRate ?? 1;
-            SetSamplingAgentDecision(span, defaultRate);
+            SetSamplingAgentDecisionTag(span, defaultRate);
             return defaultRate;
 
-            static void SetSamplingAgentDecision(Span span, float sampleRate)
+            static void SetSamplingAgentDecisionTag(Span span, float sampleRate)
             {
                 if (span.Tags is CommonTags commonTags)
                 {
