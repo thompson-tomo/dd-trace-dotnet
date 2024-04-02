@@ -50,8 +50,8 @@ namespace Samples.Yarp.DistributedTracing
             });
         }
 
-        internal RouteConfig[] GetRoutes() =>
-            [
+        internal RouteConfig[] GetRoutes() => new []
+            {
                 new RouteConfig()
                 {
                     RouteId = "route1",
@@ -62,12 +62,12 @@ namespace Samples.Yarp.DistributedTracing
                         Path = "{**catch-all}"
                     }
                 }
-            ];
+            };
 
         internal ClusterConfig[] GetClusters(string destinationUri)
         {
-            return
-            [
+            return new []
+            {
                 new ClusterConfig()
                 {
                     ClusterId = "cluster1",
@@ -76,7 +76,7 @@ namespace Samples.Yarp.DistributedTracing
                         { "destination1", new DestinationConfig() { Address = destinationUri } },
                     }
                 }
-            ];
+            };
         }
     }
 }
