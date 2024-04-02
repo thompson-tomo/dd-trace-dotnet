@@ -3,6 +3,8 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2017 Datadog, Inc.
 // </copyright>
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -19,21 +21,21 @@ namespace Datadog.Trace.Sampling
         private readonly bool _alwaysMatch;
 
         // TODO consider moving toward these https://github.com/dotnet/runtime/blob/main/src/libraries/Common/src/System/Text/SimpleRegex.cs
-        private readonly Regex _serviceNameRegex;
-        private readonly Regex _operationNameRegex;
-        private readonly Regex _resourceNameRegex;
-        private readonly List<KeyValuePair<string, Regex>> _tagRegexes;
+        private readonly Regex? _serviceNameRegex;
+        private readonly Regex? _operationNameRegex;
+        private readonly Regex? _resourceNameRegex;
+        private readonly List<KeyValuePair<string, Regex?>>? _tagRegexes;
 
         private bool _regexTimedOut;
 
         public CustomSamplingRule(
             float rate,
-            string ruleName,
+            string? ruleName,
             string patternFormat,
-            string serviceNamePattern,
-            string operationNamePattern,
-            string resourceNamePattern,
-            ICollection<KeyValuePair<string, string>> tagPatterns)
+            string? serviceNamePattern,
+            string? operationNamePattern,
+            string? resourceNamePattern,
+            ICollection<KeyValuePair<string, string?>>? tagPatterns)
         {
             _samplingRate = rate;
             RuleName = ruleName;
@@ -53,7 +55,7 @@ namespace Datadog.Trace.Sampling
             }
         }
 
-        public string RuleName { get; }
+        public string? RuleName { get; }
 
         public int SamplingMechanism => Datadog.Trace.Sampling.SamplingMechanism.TraceSamplingRule;
 
@@ -137,23 +139,23 @@ namespace Datadog.Trace.Sampling
         private class CustomRuleConfig
         {
             [JsonProperty(PropertyName = "rule_name")]
-            public string RuleName { get; set; }
+            public string? RuleName { get; set; }
 
             [JsonRequired]
             [JsonProperty(PropertyName = "sample_rate")]
             public float SampleRate { get; set; }
 
             [JsonProperty(PropertyName = "name")]
-            public string OperationName { get; set; }
+            public string? OperationName { get; set; }
 
             [JsonProperty(PropertyName = "service")]
-            public string Service { get; set; }
+            public string? Service { get; set; }
 
             [JsonProperty(PropertyName = "resource")]
-            public string Resource { get; set; }
+            public string? Resource { get; set; }
 
             [JsonProperty(PropertyName = "tags")]
-            public Dictionary<string, string> Tags { get; set; }
+            public Dictionary<string, string?>? Tags { get; set; }
         }
     }
 }

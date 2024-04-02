@@ -60,7 +60,7 @@ internal static class RegexBuilder
         }
     }
 
-    public static List<KeyValuePair<string, Regex?>> Build(ICollection<KeyValuePair<string, string?>> patterns, string format)
+    public static List<KeyValuePair<string, Regex?>> Build(ICollection<KeyValuePair<string, string?>>? patterns, string format)
     {
         if (patterns is { Count: > 0 })
         {

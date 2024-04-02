@@ -3,6 +3,8 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2017 Datadog, Inc.
 // </copyright>
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using Datadog.Trace.Logging;
@@ -50,7 +52,7 @@ namespace Datadog.Trace.Sampling
                 return defaultRate;
             }
 
-            var env = span.Context.TraceContext.Environment;
+            var env = span.Context.TraceContext.Environment ?? string.Empty;
             var service = span.ServiceName;
 
             var key = new SampleRateKey(service, env);
@@ -166,7 +168,7 @@ namespace Datadog.Trace.Sampling
                 return _service == other._service && _env == other._env;
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 return obj is SampleRateKey other && Equals(other);
             }
