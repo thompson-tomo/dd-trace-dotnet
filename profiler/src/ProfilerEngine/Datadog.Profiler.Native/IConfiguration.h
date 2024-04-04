@@ -69,5 +69,5 @@ public:
     virtual bool IsSsiEnabled() const = 0;
     virtual bool IsProfilerEnabled() const = 0;
     virtual int32_t SsiShortLivedThreshold() const = 0;
-
+    virtual bool IsEtwLoggingEnabled() const = 0;
 };

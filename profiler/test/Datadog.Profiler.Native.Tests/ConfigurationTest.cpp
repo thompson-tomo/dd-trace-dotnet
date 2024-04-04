@@ -936,3 +936,22 @@ TEST(ConfigurationTest, CheckProfilerIsEnabledIfEnvVarIsTrue)
     auto expectedValue = true;
     ASSERT_THAT(configuration.IsProfilerEnabled(), expectedValue);
 }
+
+TEST(ConfigurationTest, CheckEtwLoggingIsDisabledByDefault)
+{
+    auto configuration = Configuration{};
+    ASSERT_THAT(configuration.IsEtwLoggingEnabled(), false);
+}
+
+TEST(ConfigurationTest, CheckEtwLoggingIsEnabledIfEnvVarSetToTrue)
+{
+    EnvironmentHelper::EnvironmentVariable ar(EnvironmentVariables::EtwLoggingEnabled, WStr("1"));
+    auto configuration = Configuration{};
+    auto expectedValue =
+#ifdef LINUX
+        false;
+#else
+        true;
+#endif
+    ASSERT_THAT(configuration.IsEtwLoggingEnabled(), expectedValue);
+}

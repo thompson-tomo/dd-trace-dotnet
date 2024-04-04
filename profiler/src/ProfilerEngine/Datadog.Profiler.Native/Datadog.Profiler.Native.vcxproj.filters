@@ -436,6 +436,7 @@
     <ClInclude Include="ProfilerTelemetry.h">
       <Filter>CorProfiler-Infrastructure</Filter>
     </ClInclude>
+    <ClInclude Include="LinkedList.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="OpSysTools.cpp">

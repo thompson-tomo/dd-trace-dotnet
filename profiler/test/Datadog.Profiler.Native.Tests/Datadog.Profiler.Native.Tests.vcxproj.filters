@@ -163,6 +163,9 @@
     <ClCompile Include="..\..\src\ProfilerEngine\Datadog.Profiler.Native\SsiManager.cpp">
       <Filter>External Sources</Filter>
     </ClCompile>
+    <ClCompile Include="LinkedListTest.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ProfilerEngine\Datadog.Profiler.Native\HResultConverter.h">

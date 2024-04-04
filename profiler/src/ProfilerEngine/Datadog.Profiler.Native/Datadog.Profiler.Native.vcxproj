@@ -248,6 +248,7 @@
     <ClInclude Include="FrameworkThreadInfo.h" />
     <ClInclude Include="ISsiManager.h" />
     <ClInclude Include="ProfilerTelemetry.h" />
+    <ClInclude Include="LinkedList.hpp" />
     <ClInclude Include="RawSamples.hpp" />
     <ClInclude Include="SamplesEnumerator.h" />
     <ClInclude Include="SsiManager.h" />

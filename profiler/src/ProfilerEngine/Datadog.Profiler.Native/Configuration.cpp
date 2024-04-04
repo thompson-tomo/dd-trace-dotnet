@@ -92,6 +92,7 @@ Configuration::Configuration()
     ExtractSsiState(_isSsiDeployed, _isSsiEnabled);
     _isProfilerEnabled = GetEnvironmentValue(EnvironmentVariables::ProfilerEnabled, false);
     _ssiShortLivedThreshold = GetEnvironmentValue(EnvironmentVariables::SsiShortLivedThreshold, 30);
+    _isEtwLoggingEnabled = GetEnvironmentValue(EnvironmentVariables::EtwLoggingEnabled, false);
 }
 
 fs::path Configuration::ExtractLogDirectory()
@@ -559,6 +560,14 @@ int32_t Configuration::SsiShortLivedThreshold() const
     return _ssiShortLivedThreshold;
 }
 
+bool Configuration::IsEtwLoggingEnabled() const
+{
+#ifdef LINUX
+    return false;
+#else
+    return _isEtwLoggingEnabled;
+#endif
+}
 
 bool convert_to(shared::WSTRING const& s, bool& result)
 {

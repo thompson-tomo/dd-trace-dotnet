@@ -75,6 +75,7 @@ public:
     MOCK_METHOD(bool, IsSsiEnabled, (), (const override));
     MOCK_METHOD(bool, IsProfilerEnabled, (), (const override));
     MOCK_METHOD(int32_t, SsiShortLivedThreshold, (), (const override));
+    MOCK_METHOD(bool, IsEtwLoggingEnabled, (), (const override));
 };
 
 class MockExporter : public IExporter
