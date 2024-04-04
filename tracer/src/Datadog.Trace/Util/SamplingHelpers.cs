@@ -37,8 +37,8 @@ namespace Datadog.Trace.Util
 
         internal static bool IsKeptBySamplingPriority(ArraySegment<Span> trace)
         {
-            var samplingPriority = TraceContext.GetTraceContext(trace)
-                                              ?.GetSamplingPriority(triggerSamplingDecision: true);
+            var traceContext = TraceContext.GetTraceContext(trace);
+            var samplingPriority = traceContext?.GetOrMakeSamplingDecision();
 
             return SamplingPriorityValues.IsKeep(samplingPriority);
         }

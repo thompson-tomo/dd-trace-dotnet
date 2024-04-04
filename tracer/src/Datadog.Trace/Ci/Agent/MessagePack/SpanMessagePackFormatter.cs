@@ -357,7 +357,7 @@ namespace Datadog.Trace.Ci.Agent.MessagePack
                 }
 
                 // add "_sampling_priority_v1" tag
-                if (span.Context.TraceContext.GetSamplingPriority(triggerSamplingDecision: true) is { } samplingPriority)
+                if (span.Context.TraceContext.GetOrMakeSamplingDecision() is { } samplingPriority)
                 {
                     count++;
                     offset += MessagePackBinary.WriteStringBytes(ref bytes, offset, _samplingPriorityNameBytes);

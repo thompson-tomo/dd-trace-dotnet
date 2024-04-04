@@ -34,7 +34,7 @@ internal class ApiSecurity
     {
         try
         {
-            var samplingPriority = localRootSpan.Context.TraceContext.GetSamplingPriority(triggerSamplingDecision: true);
+            var samplingPriority = localRootSpan.Context.TraceContext.GetOrMakeSamplingDecision();
 
             if (_enabled && lastWafCall && SamplingPriorityValues.IsKeep(samplingPriority))
             {

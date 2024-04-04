@@ -342,7 +342,7 @@ namespace Datadog.Trace
 
                 case Keys.SamplingPriority:
                 case HttpHeaderNames.SamplingPriority:
-                    var samplingPriority = GetSamplingPriority(triggerSamplingDecision: false);
+                    var samplingPriority = GetOrMakeSamplingDecision();
                     value = samplingPriority?.ToString(invariant);
                     return true;
 
@@ -394,18 +394,12 @@ namespace Datadog.Trace
         }
 
         /// <summary>
-        /// If <see cref="TraceContext"/> is not null, returns <see cref="TraceContext.GetSamplingPriority"/>,
-        /// optionally triggering a sampling decision.
+        /// If <see cref="TraceContext"/> is not null, returns <see cref="TraceContext.GetSamplingPriority"/>.
         /// Otherwise, returns <see cref="SamplingPriority"/>.
         /// </summary>
-        internal int? GetSamplingPriority(bool triggerSamplingDecision)
+        internal int? GetOrMakeSamplingDecision()
         {
-            return TraceContext == null ?
-                       // this SpanContext is a propagated context extracted from an incoming request, not associated to a trace
-                       SamplingPriority :
-                       // this SpanContext belongs to a local trace, return the trace's sampling priority,
-                       // triggering a sampling decision if requested
-                       TraceContext.GetSamplingPriority(triggerSamplingDecision);
+            return TraceContext == null ? SamplingPriority : TraceContext.GetOrMakeSamplingDecision();
         }
 
         [return: MaybeNull]

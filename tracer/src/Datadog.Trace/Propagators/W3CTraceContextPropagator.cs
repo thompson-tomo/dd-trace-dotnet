@@ -123,8 +123,9 @@ namespace Datadog.Trace.Propagators
 
         internal static string CreateTraceParentHeader(SpanContext context)
         {
-            var samplingPriority = context.GetSamplingPriority(triggerSamplingDecision: true) ?? SamplingPriorityValues.AutoKeep;
+            var samplingPriority = context.GetOrMakeSamplingDecision() ?? SamplingPriorityValues.AutoKeep;
             var sampled = SamplingPriorityValues.IsKeep(samplingPriority) ? "01" : "00";
+
 #if NET6_0_OR_GREATER
             return string.Create(null, stackalloc char[128], $"00-{context.RawTraceId}-{context.RawSpanId}-{sampled}");
 #else
@@ -141,7 +142,7 @@ namespace Datadog.Trace.Propagators
                 sb.Append("dd=");
 
                 // sampling priority ("s:<value>")
-                if (context.GetSamplingPriority(triggerSamplingDecision: true) is { } samplingPriority)
+                if (context.GetOrMakeSamplingDecision() is { } samplingPriority)
                 {
                     sb.Append("s:").Append(SamplingPriorityValues.ToString(samplingPriority)).Append(TraceStateDatadogPairsSeparator);
                 }

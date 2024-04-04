@@ -139,7 +139,7 @@ namespace Datadog.Trace.Propagators
 
         internal static string CreateHeader(SpanContext context)
         {
-            var samplingPriority = context.GetSamplingPriority(triggerSamplingDecision: true) ?? SamplingPriorityValues.AutoKeep;
+            var samplingPriority = context.GetOrMakeSamplingDecision() ?? SamplingPriorityValues.AutoKeep;
             var sampled = SamplingPriorityValues.IsKeep(samplingPriority) ? "1" : "0";
 
 #if NET6_0_OR_GREATER

@@ -199,8 +199,7 @@ namespace Datadog.Trace
 
             if (spansToWrite.Count > 0)
             {
-                _ = GetSamplingPriority(triggerSamplingDecision: true);
-
+                _ = GetOrMakeSamplingDecision();
                 RunSpanSampler(spansToWrite);
                 Tracer.Write(spansToWrite);
             }
@@ -219,8 +218,7 @@ namespace Datadog.Trace
 
             if (spansToWrite.Count > 0)
             {
-                _ = GetSamplingPriority(triggerSamplingDecision: true);
-
+                _ = GetOrMakeSamplingDecision();
                 RunSpanSampler(spansToWrite);
                 Tracer.Write(spansToWrite);
             }
@@ -229,26 +227,30 @@ namespace Datadog.Trace
         /// <summary>
         /// Gets the trace's sampling priority, optionally triggering a sampling decision.
         /// </summary>
-        public int? GetSamplingPriority(bool triggerSamplingDecision = false)
+        public int? GetSamplingPriority()
         {
-            if (_samplingPriority == null && triggerSamplingDecision)
-            {
-                // this call sets _samplingPriority
-                MakeSamplingDecision();
-            }
-
             return _samplingPriority;
         }
 
-        private void MakeSamplingDecision()
+        public int? GetOrMakeSamplingDecision()
         {
+            if (_samplingPriority is { } samplingPriority)
+            {
+                // we already have a sampling decision
+                return samplingPriority;
+            }
+
             if (_rootSpan is null)
             {
-                return;
+                // we need a span to make a sampling decision:
+                // - we need a trace id, and for now trace id lives in every SpanContext
+                // - we want to apply sampling rules, if possible
+                return null;
             }
 
             var samplingDecision = CurrentTraceSettings.TraceSampler?.MakeSamplingDecision(_rootSpan) ?? SamplingDecision.Default;
             SetSamplingPriority(samplingDecision);
+            return samplingDecision.Priority;
         }
 
         public void SetSamplingPriority(SamplingDecision decision, bool notifyDistributedTracer = true)

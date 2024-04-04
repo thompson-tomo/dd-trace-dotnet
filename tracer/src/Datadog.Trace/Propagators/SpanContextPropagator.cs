@@ -113,8 +113,8 @@ namespace Datadog.Trace.Propagators
             if (context == null!) { ThrowHelper.ThrowArgumentNullException(nameof(context)); }
             if (carrier == null) { ThrowHelper.ThrowArgumentNullException(nameof(carrier)); }
 
-            // trigger a sampling decision if it hasn't been done yet
-            context.GetSamplingPriority(triggerSamplingDecision: true);
+            // trigger a sampling decision if it hasn't happened yet
+            _ = context.GetOrMakeSamplingDecision();
 
             for (var i = 0; i < _injectors.Length; i++)
             {
