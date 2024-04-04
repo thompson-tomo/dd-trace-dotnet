@@ -132,10 +132,10 @@ public class MyCustomTestMethodAttribute : TestMethodAttribute
 {
     public override TestResult[] Execute(ITestMethod testMethod)
     {
-        return
-        [
+        return new[]
+        {
             new TestResult { DisplayName = "My Custom: " + testMethod.TestMethodName, Outcome = UnitTestOutcome.Passed, }
-        ];
+        };
     }
 }
 
@@ -153,11 +153,11 @@ public class MyCustomMultipleResultsTestMethodAttribute : TestMethodAttribute
 {
     public override TestResult[] Execute(ITestMethod testMethod)
     {
-        return
-        [
+        return new[]
+        {
             new TestResult { DisplayName = "My Custom 3|1: " + testMethod.TestMethodName, Outcome = UnitTestOutcome.Passed, },
 
             new TestResult { DisplayName = "My Custom 3|2: " + testMethod.TestMethodName, Outcome = UnitTestOutcome.Passed, }
-        ];
+        };
     }
 }

@@ -1392,6 +1392,7 @@ partial class Build
                         .SetProperty("TargetFramework", framework.ToString())
                         .SetProperty("BuildInParallel", "true")
                         .SetProperty("CheckEolTargetFramework", "false")
+                        .SetVerbosity(MSBuildVerbosity.Minimal)
                         .When(!string.IsNullOrEmpty(NugetPackageDirectory), o => o.SetProperty("RestorePackagesPath", NugetPackageDirectory))
                         .SetProcessArgumentConfigurator(arg => arg.Add("/nowarn:NU1701").Add($"/bl:\"{(BuildDataDirectory / $"build_{DateTime.UtcNow.Ticks}.binlog")}\""))
                         .When(TestAllPackageVersions, o => o.SetProperty("TestAllPackageVersions", "true"))
