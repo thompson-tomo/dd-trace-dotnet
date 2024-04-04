@@ -398,15 +398,15 @@ namespace Datadog.Trace
         /// optionally triggering a sampling decision.
         /// Otherwise, returns <see cref="SamplingPriority"/>.
         /// </summary>
-        internal int? GetSamplingPriority(bool triggerSamplingDecision) =>
-            TraceContext switch
-            {
-                // this SpanContext is a propagated context extracted from an incoming request, not associated to a trace
-                null => SamplingPriority,
-
-                // this SpanContext belongs to a local trace, return the trace's sampling priority
-                not null => TraceContext.GetSamplingPriority(triggerSamplingDecision)
-            };
+        internal int? GetSamplingPriority(bool triggerSamplingDecision)
+        {
+            return TraceContext == null ?
+                       // this SpanContext is a propagated context extracted from an incoming request, not associated to a trace
+                       SamplingPriority :
+                       // this SpanContext belongs to a local trace, return the trace's sampling priority,
+                       // triggering a sampling decision if requested
+                       TraceContext.GetSamplingPriority(triggerSamplingDecision);
+        }
 
         [return: MaybeNull]
         internal TraceTagCollection PrepareTagsForPropagation()
